@@ -162,6 +162,8 @@ button.btn, .btn, input[type="submit"].btn, input[type="button"].btn{background:
 #lpList .item.lp-p1{border-left-color:var(--warn); background:linear-gradient(90deg, rgba(224,138,30,.04) 0%, transparent 60%);}
 #lpList .item.lp-p1.lp-even{background:linear-gradient(90deg, rgba(224,138,30,.06) 0%, rgba(247,250,253,.6) 60%);}
 #lpList .item.lp-p2{border-left-color:var(--success);}
+#lpList .item.lp-archived{opacity:0.8; border-left-style:dashed;}
+#lpList .item.lp-archived .it-actions{justify-content:flex-start;}
 #lpList .item:hover{box-shadow:0 2px 10px rgba(27,79,114,.08);}
 .item .it-top{display:flex; align-items:flex-start; gap:8px;}
 .item .it-title{font-weight:600; font-size:14.5px; flex:1; min-width:0; word-break:break-word;}
@@ -787,7 +789,7 @@ html[data-bp="mobile"] .pg-topic-lib, html[data-bp="small"] .pg-topic-lib{grid-t
             <div data-page-node-id="XyOLsdk11okojvmwRAAYJK" class="field"><label data-page-node-id="eNHeaiPg2NHSOMw1TYJbFr"><!--pnid:fhY0ebY1r6fo1tTkD6VRJS-->出资比例</label><input data-page-node-id="nLWBqqgV3Iz7jiHgM8RytM" class="pct-input" id="l_ratio" placeholder="如：10%"></div>
           </div>
           <div data-page-node-id="f4xK3HnbJPPuOS9oLogNjF" class="row">
-            <div data-page-node-id="aFvdtD0F65IhBddEPMroFW" class="field"><label data-page-node-id="iJcfN6cTL4dXfxZZ21yxBR"><!--pnid:0rrtXRf15hEa0S8AahE19A-->状态</label><select data-page-node-id="pcE7SZromk0AwLY003BqeV" id="l_status"><option data-page-node-id="W19cmBVz3rrHMelrFxnBny"><!--pnid:R38DF7vUKz7NchgKuAbEGH-->接触</option><option data-page-node-id="C1C0shOMzN5XOlLmEQOvi2"><!--pnid:zbTlzCVmBv5oggtadKXEiW-->尽调</option><option data-page-node-id="kmcOcFiYKhZ0ibGPfJypM0"><!--pnid:qEAfdzC09jldd5d6qvcS6L-->签约</option><option data-page-node-id="ZNduAYAWqmqerIX53wszXF"><!--pnid:xrDPVM6q6wDMsQ5rVUaehi-->打款</option><option data-page-node-id="q48JpI9q3zRascR8OzOReU"><!--pnid:mOeADonJjAV8kGu2th9sMR-->退出</option></select></div>
+            <div data-page-node-id="aFvdtD0F65IhBddEPMroFW" class="field"><label data-page-node-id="iJcfN6cTL4dXfxZZ21yxBR"><!--pnid:0rrtXRf15hEa0S8AahE19A-->状态</label><select data-page-node-id="pcE7SZromk0AwLY003BqeV" id="l_status"><option data-page-node-id="W19cmBVz3rrHMelrFxnBny"><!--pnid:R38DF7vUKz7NchgKuAbEGH-->接触</option><option data-page-node-id="C1C0shOMzN5XOlLmEQOvi2"><!--pnid:zbTlzCVmBv5oggtadKXEiW-->尽调</option><option data-page-node-id="kmcOcFiYKhZ0ibGPfJypM0"><!--pnid:qEAfdzC09jldd5d6qvcS6L-->签约</option><option data-page-node-id="ZNduAYAWqmqerIX53wszXF"><!--pnid:xrDPVM6q6wDMsQ5rVUaehi-->打款</option><option data-page-node-id="q48JpI9q3zRascR8OzOReU"><!--pnid:mOeADonJjAV8kGu2th9sMR-->退出</option><option>募集成功</option><option>已放弃</option></select></div>
             <div data-page-node-id="6eNF2JolGEu324a4cDbYoa" class="field"><label data-page-node-id="m60HpCMNBIw8Cv826b9HTc"><!--pnid:PkQGnwi4sEjjev4eEClCsv-->最近联系</label><input data-page-node-id="fdB1F3hRVZ5jS7eAJxQP11" id="l_last" type="date"></div>
             <div data-page-node-id="ZMQvSxHTiANr3mDh3PQdCw" class="field"><label data-page-node-id="0h3o6CUO3CxH7LDub3PTBv"><!--pnid:qaCRa5QpdUEi2vmRVWEemD-->下次跟进</label><input data-page-node-id="G9ISVbsa50vc6nRQJEmF7f" id="l_next" type="date"></div>
           </div>
@@ -804,6 +806,12 @@ html[data-bp="mobile"] .pg-topic-lib, html[data-bp="small"] .pg-topic-lib{grid-t
       </div>
       <div data-page-node-id="o5WF60iWF5BtzX4lQ4nKo3" class="card">
         <h3 data-page-node-id="aE4c91DHUgKnpZfbe4k4yk"><svg data-page-node-id="kEpvcC5BQ6zxtBZ9dE5CSJ" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="qy2khNpCWUmEM04xNGmh9d" d="M3 3v18h18"/><path data-page-node-id="BgsK4zPRGxkmspSMN6ik19" d="M7 14l4-4 3 3 5-6"/></svg><!--pnid:ExbQgtZw7kyGSBt7tPOpZL-->LP 跟进清单</h3>
+        <div class="seg" id="lpSeg">
+          <button class="seg-btn active" data-lpview="all">全部</button>
+          <button class="seg-btn" data-lpview="active">跟进中(<span id="lpActiveCnt">0</span>)</button>
+          <button class="seg-btn" data-lpview="success">募集成功(<span id="lpSuccessCnt">0</span>)</button>
+          <button class="seg-btn" data-lpview="abandoned">已放弃(<span id="lpAbandonedCnt">0</span>)</button>
+        </div>
         <div class="filter-bar"><input id="lp_q" class="f-input" placeholder="搜索投资人/机构/状态…"></div>
         <div class="muted" style="font-size:12px;margin:6px 2px 0;">列表顺序可手动调整：用每条下方的「置顶 / 上移 / 下移」按钮排序；手动排过序后按自定义顺序显示（不再自动按下次跟进日排序）。</div>
         <div data-page-node-id="VLE3wnZP2eBChVmb6xIdhD" class="list" id="lpList"></div>
@@ -1039,7 +1047,9 @@ var CAT_COLOR = {"募":"cat-mu","投":"cat-tou","管":"cat-guan","退":"cat-tui"
 var FUNDS = ["智能制造基金","睿晟基金","曦和壹号基金","曦和贰号基金","曦和叁号基金","曦和肆号基金","曦和伍号基金","玉环航运基金"];
 var PIPE_STAGES = ["募","投","管","退"];
 var PIPE_STATUS_COLOR = {"未开始":"#9aa6b2","进行中":"#2e6ea8","预警":"#e08a1e","已完成":"#2e9e5b"};
-var LP_COLOR = {"接触":"#9aa6b2","尽调":"#2e6ea8","签约":"#157a8a","打款":"#2e9e5b","退出":"#d64545"};
+var LP_COLOR = {"接触":"#9aa6b2","尽调":"#2e6ea8","签约":"#157a8a","打款":"#2e9e5b","退出":"#d64545","募集成功":"#2e9e5b","已放弃":"#999"};
+var LP_ACTIVE_STATUSES = ["接触","尽调","签约","打款","退出"];
+var lpView = "all"; // all | active | success | abandoned
 
 var state = { tasks:[], pipeline:[], meetings:[], lps:[], temps:[], reserves:[], funds:[], customFunds:[], fundOrder:[], fundDetails:{}, weekCursor:"", seeded:false, lpManualOrder:false, party:{} };
 var currentFund = "全部";
@@ -1632,6 +1642,9 @@ function lpMoveTop(id){ var i=lpIndex(id); if(i<0) return; var x=state.lps.splic
 function lpMoveUp(id){ var i=lpIndex(id); if(i<=0) return; var t=state.lps[i-1]; state.lps[i-1]=state.lps[i]; state.lps[i]=t; state.lpManualOrder=true; save(); renderAll(); toast("已上移一位"); }
 function lpMoveDown(id){ var i=lpIndex(id); if(i<0||i>=state.lps.length-1) return; var t=state.lps[i+1]; state.lps[i+1]=state.lps[i]; state.lps[i]=t; state.lpManualOrder=true; save(); renderAll(); toast("已下移一位"); }
 function lpIndex(id){ for(var k=0;k<state.lps.length;k++){ if(state.lps[k].id===id) return k; } return -1; }
+function lpArchiveSuccess(id){ var l=state.lps.filter(function(x){return x.id===id;})[0]; if(!l) return; l.status="募集成功"; l.archivedAt=todayStr(); save(); renderLps(); toast("已归档到「募集成功」"); }
+function lpArchiveAbandon(id){ var l=state.lps.filter(function(x){return x.id===id;})[0]; if(!l) return; l.status="已放弃"; l.archivedAt=todayStr(); save(); renderLps(); toast("已归档到「已放弃」"); }
+function lpRestore(id){ var l=state.lps.filter(function(x){return x.id===id;})[0]; if(!l) return; l.status="接触"; delete l.archivedAt; save(); renderLps(); toast("已恢复到跟进中"); }
 
 /* ---------- LP 跟进进展 ---------- */
 function toggleLpProg(id){
@@ -1654,6 +1667,26 @@ function deleteLpProgress(lpId, progId){
   var l=state.lps.filter(function(x){return x.id===lpId;})[0]; if(!l||!l.progress) return;
   l.progress=l.progress.filter(function(p){return p.id!==progId;});
   save(); renderLps(); toast("已删除跟进记录");
+}
+/* ---------- 投资项目跟进进展 ---------- */
+function toggleInvProg(fund, idx){
+  var list=document.getElementById("invpg_list_"+fund+"_"+idx);
+  var arr=document.getElementById("invpg_arrow_"+fund+"_"+idx);
+  if(list){ list.classList.toggle("hidden"); if(arr) arr.style.transform=list.classList.contains("hidden")?"":"rotate(180deg)"; }
+}
+function addInvProg(fund, idx){
+  var det=getFundDetail(fund); if(!det.investments||!det.investments[idx]) return;
+  var dateVal=document.getElementById("invpg_date_"+fund+"_"+idx).value;
+  var textVal=document.getElementById("invpg_text_"+fund+"_"+idx).value.trim();
+  if(!textVal){ toast("请填写跟进内容"); return; }
+  if(!det.investments[idx].invProgressLog) det.investments[idx].invProgressLog=[];
+  det.investments[idx].invProgressLog.push({id:uid(), date:dateVal, content:textVal});
+  save(); renderPipeline(); toast("已添加项目跟进记录");
+}
+function deleteInvProg(fund, idx, progId){
+  var det=getFundDetail(fund); if(!det.investments||!det.investments[idx]||!det.investments[idx].invProgressLog) return;
+  det.investments[idx].invProgressLog=det.investments[idx].invProgressLog.filter(function(p){return p.id!==progId;});
+  save(); renderPipeline(); toast("已删除项目跟进记录");
 }
 function editReserve(id){ editReserveId=id; editLpId=null; renderReserves(); renderLps(); }
 function cancelEditReserve(){ editReserveId=null; renderReserves(); }
@@ -2293,6 +2326,34 @@ function fundDetailHTML(f){
             + '<span>投资时估值：'+(+p.valAtInv||0)+' 万</span><span>投资时持股：'+esc(p.shareAtInv||"—")+'</span>'
             + '<span>最新估值：'+(+p.valNow||0)+' 万</span><span>最新持股：'+esc(p.shareNow||"—")+'</span></div>';
       if(p.terms) html += '<div class="inv-terms">投资条款：'+esc(p.terms)+'</div>';
+      // 投资项目跟进进展
+      var invProgs = (p.invProgressLog||[]);
+      var invProgHtml = '<div class="lp-progress" style="margin-top:8px;">'+
+        '<div class="lp-progress-head" onclick="toggleInvProg(\''+f+'\','+i+')">'+
+          '<h4>跟进进展</h4>'+
+          '<span class="lp-prog-count">'+invProgs.length+' 条</span>'+
+          '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform .2s;" id="invpg_arrow_'+f+'_'+i+'"><path d="M6 9l3 3 3-3"/></svg>'+
+        '</div>';
+      if(invProgs.length > 0){
+        var sortedInvProgs = invProgs.slice().sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
+        invProgHtml += '<div class="lp-progress-list" id="invpg_list_'+f+'_'+i+'">';
+        sortedInvProgs.forEach(function(ip){
+          invProgHtml += '<div class="lp-prog-item">'+
+            '<span class="lp-prog-date">'+esc(ip.date)+'</span>'+
+            '<span class="lp-prog-text">'+esc(ip.content)+'</span>'+
+            '<button class="lp-prog-del" data-invprog="del" data-fund="'+esc(f)+'" data-idx="'+i+'" data-pid="'+ip.id+'" title="删除此条">&times;</button>'+
+          '</div>';
+        });
+        invProgHtml += '</div>';
+      } else {
+        invProgHtml += '<div class="lp-progress-list hidden" id="invpg_list_'+f+'_'+i+'"></div>';
+      }
+      invProgHtml += '<div class="lp-prog-add-form" id="invpg_add_'+f+'_'+i+'">'+
+        '<input type="date" id="invpg_date_'+f+'_'+i+'" value="'+todayStr()+'">'+
+        '<input type="text" id="invpg_text_'+f+'_'+i+'" placeholder="记录该项目跟进情况…">'+
+        '<button class="icon-btn ok" data-invprog="add" data-fund="'+esc(f)+'" data-idx="'+i+'">＋ 添加</button>'+
+      '</div></div>';
+      html += invProgHtml;
       html += '</div>';
       }
     });
@@ -2574,13 +2635,27 @@ function lpEditFormHTML(l){
 function renderLps(){
   var list=document.getElementById("lpList");
   var q=(lpQ||"").trim().toLowerCase();
-  var arr=state.lps.filter(function(l){ if(!q) return true; var hay=(l.name+" "+(l.type||"")+" "+(l.status||"")+" "+(l.note||"")+" "+(l.demand||"")+" "+(l.terms||"")).toLowerCase(); return hay.indexOf(q)>=0; });
+  var allLps = state.lps.filter(function(l){ if(!q) return true; var hay=(l.name+" "+(l.type||"")+" "+(l.status||"")+" "+(l.note||"")+" "+(l.demand||"")+" "+(l.terms||"")).toLowerCase(); return hay.indexOf(q)>=0; });
+  // 按视图筛选
+  var arr = allLps.filter(function(l){
+    if(lpView==="all") return true;
+    if(lpView==="active") return LP_ACTIVE_STATUSES.indexOf(l.status)>=0;
+    if(lpView==="success") return l.status==="募集成功";
+    if(lpView==="abandoned") return l.status==="已放弃";
+    return true;
+  });
+  // 更新计数
+  var cntEl = function(id){ var e=document.getElementById(id); if(e) e.textContent=allLps.filter(function(l){ if(id==="lpActiveCnt") return LP_ACTIVE_STATUSES.indexOf(l.status)>=0; if(id==="lpSuccessCnt") return l.status==="募集成功"; if(id==="lpAbandonedCnt") return l.status==="已放弃"; return false; }).length; };
+  cntEl("lpActiveCnt"); cntEl("lpSuccessCnt"); cntEl("lpAbandonedCnt");
+  // 更新seg按钮高亮
+  Array.prototype.forEach.call(document.querySelectorAll("#lpSeg .seg-btn"), function(b){ b.classList.toggle("active", b.getAttribute("data-lpview")===lpView); });
   if(!state.lps.length){ list.innerHTML='<div class="empty">还没有 LP 记录。</div>'; }
-  else if(!arr.length){ list.innerHTML='<div class="empty">没有符合搜索条件的 LP。</div>'; bindItemBtns(list); bindPctInputs(); }
+  else if(!arr.length){ list.innerHTML='<div class="empty">'+(lpView==="all"?"没有符合搜索条件的 LP。":"该分类下暂无 LP。")+'</div>'; bindItemBtns(list); bindPctInputs(); }
   else{
     if(!state.lpManualOrder){
       arr.sort(function(a,b){ return (a.next||"9999").localeCompare(b.next||"9999"); });
     }
+    var isArchived = (lpView==="success" || lpView==="abandoned");
     list.innerHTML = arr.map(function(l, idx){
       if(editLpId===l.id) return lpEditFormHTML(l);
       var ov = l.next && isOverdue(l.next);
@@ -2616,7 +2691,28 @@ function renderLps(){
           '<button class="icon-btn ok" data-lpprog="add" data-lpid="'+l.id+'">＋ 添加</button>'+
         '</div></div>';
       }
-      return '<div class="item '+evenOdd+' '+priCls+'">'+
+      // 归档后的操作按钮（简化）
+      var archActions = '';
+      if(isArchived){
+        archActions = '<div class="it-actions">'+
+          '<span class="wr-histag">'+(l.status==="募集成功"?"募集成功 · 归档时间："+(l.archivedAt?fmtMD(l.archivedAt):"—"):"已放弃 · 放弃时间："+(l.archivedAt?fmtMD(l.archivedAt):"—"))+'</span>'+
+          '<button class="icon-btn" data-lp="restore" data-id="'+l.id+'">恢复到跟进中</button>'+
+          '<button class="icon-btn del" data-del="lp" data-id="'+l.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>删除</button>'+
+        '</div>';
+      } else {
+        var canArchive = LP_ACTIVE_STATUSES.indexOf(l.status)>=0;
+        archActions = '<div class="it-actions">'+
+          '<button class="icon-btn ok" data-lp="fol" data-id="'+l.id+'">标记已跟进</button>'+
+          '<button class="icon-btn edit" data-lp="edit" data-id="'+l.id+'">编辑</button>'+
+          (canArchive?'<button class="icon-btn ok" data-lp="archiveSuccess" data-id="'+l.id+'" title="归档到募集成功">募集成功</button>':'')+
+          (canArchive?'<button class="icon-btn" data-lp="archiveAbandon" data-id="'+l.id+'" title="归档到已放弃">已放弃</button>':'')+
+          '<button class="icon-btn" data-lp="top" data-id="'+l.id+'" title="移到列表最前">置顶</button>'+
+          '<button class="icon-btn" data-lp="up" data-id="'+l.id+'" title="上移一位">上移</button>'+
+          '<button class="icon-btn" data-lp="down" data-id="'+l.id+'" title="下移一位">下移</button>'+
+          '<button class="icon-btn del" data-del="lp" data-id="'+l.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>删除</button>'+
+        '</div>';
+      }
+      return '<div class="item '+evenOdd+' '+priCls+(isArchived?' lp-archived':'')+'">'+
         '<div class="it-top"><div class="it-title">'+esc(l.name)+'</div>'+
           '<span class="tag" style="background:'+(LP_COLOR[l.status]||"#9aa6b2")+';color:#fff;">'+l.status+'</span></div>'+
         '<div class="it-sub">'+
@@ -2631,14 +2727,7 @@ function renderLps(){
         (l.terms?'<div class="it-sub"><span style="color:#1b4f72;">核心条款：'+esc(l.terms)+'</span></div>':'')+
         (l.demand?'<div class="it-sub"><span style="color:#a8650f;">具体诉求：'+esc(l.demand)+'</span></div>':'')+
         (l.note?'<div class="it-sub"><span>备注：'+esc(l.note)+'</span></div>':'')+
-        '<div class="it-actions">'+
-          '<button class="icon-btn ok" data-lp="fol" data-id="'+l.id+'">标记已跟进</button>'+
-          '<button class="icon-btn edit" data-lp="edit" data-id="'+l.id+'">编辑</button>'+
-          '<button class="icon-btn" data-lp="top" data-id="'+l.id+'" title="移到列表最前">置顶</button>'+
-          '<button class="icon-btn" data-lp="up" data-id="'+l.id+'" title="上移一位">上移</button>'+
-          '<button class="icon-btn" data-lp="down" data-id="'+l.id+'" title="下移一位">下移</button>'+
-          '<button class="icon-btn del" data-del="lp" data-id="'+l.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>删除</button>'+
-        '</div>'+progHtml+'</div>';
+        archActions+progHtml+'</div>';
     }).join("");
     bindItemBtns(list);
     bindPctInputs();
@@ -2704,6 +2793,9 @@ function bindItemBtns(scope){
       else if(act==="top") lpMoveTop(id);
       else if(act==="up") lpMoveUp(id);
       else if(act==="down") lpMoveDown(id);
+      else if(act==="archiveSuccess") lpArchiveSuccess(id);
+      else if(act==="archiveAbandon") lpArchiveAbandon(id);
+      else if(act==="restore") lpRestore(id);
     });
   });
   Array.prototype.forEach.call(scope.querySelectorAll("[data-lpprog]"), function(b){
@@ -2712,6 +2804,14 @@ function bindItemBtns(scope){
       var lpId=b.getAttribute("data-lpid"); var act=b.getAttribute("data-lpprog");
       if(act==="add") addLpProgress(lpId);
       else if(act==="del") deleteLpProgress(lpId, b.getAttribute("data-pid"));
+    });
+  });
+  Array.prototype.forEach.call(scope.querySelectorAll("[data-invprog]"), function(b){
+    b.addEventListener("click", function(e){
+      e.stopPropagation();
+      var fund=b.getAttribute("data-fund"); var idx=+b.getAttribute("data-idx"); var act=b.getAttribute("data-invprog");
+      if(act==="add") addInvProg(fund, idx);
+      else if(act==="del") deleteInvProg(fund, idx, b.getAttribute("data-pid"));
     });
   });
   Array.prototype.forEach.call(scope.querySelectorAll("[data-reserve]"), function(b){
@@ -4591,6 +4691,13 @@ window.onerror = function(msg, url, line, col, err){
       fnSeg.addEventListener("click", function(e){
         var b=e.target; while(b && b!==fnSeg && !b.getAttribute("data-fview")){ b=b.parentNode; }
         if(b && b.getAttribute("data-fview")){ fundingView=b.getAttribute("data-fview"); renderFundingNews(); }
+      });
+    }
+    var lpSegEl=document.getElementById("lpSeg");
+    if(lpSegEl){
+      lpSegEl.addEventListener("click", function(e){
+        var b=e.target; while(b && b!==lpSegEl && !b.getAttribute("data-lpview")){ b=b.parentNode; }
+        if(b && b.getAttribute("data-lpview")){ lpView=b.getAttribute("data-lpview"); renderLps(); }
       });
     }
     setVal("t_due", todayStr());
