@@ -171,6 +171,22 @@ button.btn, .btn, input[type="submit"].btn, input[type="button"].btn{background:
 .icon-btn.del{background:#fdeaea; color:#b32626; border-color:#f3c2c2;}
 .empty{color:var(--muted); text-align:center; padding:22px 8px; font-size:13.5px;}
 
+/* LP 跟进进展 */
+.lp-progress{margin-top:10px; border-top:1px dashed var(--border); padding-top:10px;}
+.lp-progress-head{display:flex; align-items:center; gap:6px; margin-bottom:6px; cursor:pointer; user-select:none;}
+.lp-progress-head h4{font-size:13px; font-weight:600; margin:0; color:var(--primary-2);}
+.lp-progress-head .lp-prog-count{font-size:11.5px; background:#dde9f5; color:#1b4f72; padding:1px 7px; border-radius:10px; font-weight:600;}
+.lp-progress-list{display:flex; flex-direction:column; gap:6px;}
+.lp-prog-item{display:flex; gap:8px; align-items:flex-start; font-size:12.5px; padding:6px 8px; background:#f7fafd; border-radius:9px; border:1px solid #eef1f4;}
+.lp-prog-date{font-weight:600; color:var(--primary); white-space:nowrap; min-width:82px;}
+.lp-prog-text{flex:1; color:var(--text); line-height:1.45; word-break:break-word;}
+.lp-prog-del{background:none; border:none; color:var(--danger); cursor:pointer; font-size:15px; line-height:1; padding:0 2px; opacity:.55; flex-shrink:0;}
+.lp-prog-del:hover{opacity:1;}
+.lp-prog-add-form{margin-top:6px; display:flex; gap:6px; align-items:flex-end;}
+.lp-prog-add-form input[type="date"]{flex:0 0 130px; padding:6px 8px; font-size:13px;}
+.lp-prog-add-form input[type="text"]{flex:1; min-width:0; padding:6px 8px; font-size:13px;}
+.lp-prog-add-form button{flex:0 0 auto; padding:6px 12px; font-size:13px; white-space:nowrap;}
+
 /* Stats */
 .stats{display:flex; gap:12px; flex-wrap:wrap;}
 .stat{flex:1 1 120px; background:#fbfdff; border:1px solid var(--border); border-radius:13px; padding:13px 14px;}
@@ -1604,6 +1620,29 @@ function lpMoveTop(id){ var i=lpIndex(id); if(i<0) return; var x=state.lps.splic
 function lpMoveUp(id){ var i=lpIndex(id); if(i<=0) return; var t=state.lps[i-1]; state.lps[i-1]=state.lps[i]; state.lps[i]=t; state.lpManualOrder=true; save(); renderAll(); toast("已上移一位"); }
 function lpMoveDown(id){ var i=lpIndex(id); if(i<0||i>=state.lps.length-1) return; var t=state.lps[i+1]; state.lps[i+1]=state.lps[i]; state.lps[i]=t; state.lpManualOrder=true; save(); renderAll(); toast("已下移一位"); }
 function lpIndex(id){ for(var k=0;k<state.lps.length;k++){ if(state.lps[k].id===id) return k; } return -1; }
+
+/* ---------- LP 跟进进展 ---------- */
+function toggleLpProg(id){
+  var list=document.getElementById("lppg_list_"+id);
+  var arrow=document.getElementById("lppg_arrow_"+id);
+  if(list){ list.classList.toggle("hidden"); }
+  if(arrow){ arrow.style.transform=list&&list.classList.contains("hidden")?"":"rotate(180deg)"; }
+}
+function addLpProgress(lpId){
+  var l=state.lps.filter(function(x){return x.id===lpId;})[0]; if(!l) return;
+  var dateVal=document.getElementById("lppg_date_"+lpId).value;
+  var textVal=document.getElementById("lppg_text_"+lpId).value.trim();
+  if(!textVal){ toast("请填写跟进内容"); return; }
+  if(!dateVal) dateVal=todayStr();
+  if(!l.progress) l.progress=[];
+  l.progress.push({id:uid(), date:dateVal, content:textVal});
+  save(); renderLps(); toast("已添加跟进记录");
+}
+function deleteLpProgress(lpId, progId){
+  var l=state.lps.filter(function(x){return x.id===lpId;})[0]; if(!l||!l.progress) return;
+  l.progress=l.progress.filter(function(p){return p.id!==progId;});
+  save(); renderLps(); toast("已删除跟进记录");
+}
 function editReserve(id){ editReserveId=id; editLpId=null; renderReserves(); renderLps(); }
 function cancelEditReserve(){ editReserveId=null; renderReserves(); }
 function saveReserve(id){
@@ -2534,6 +2573,35 @@ function renderLps(){
       if(editLpId===l.id) return lpEditFormHTML(l);
       var ov = l.next && isOverdue(l.next);
       var pri = l.pri||"P2";
+      var progs = (l.progress||[]);
+      var progHtml = '';
+      if(progs.length > 0 || true){
+        var sortedProgs = progs.slice().sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
+        progHtml = '<div class="lp-progress">'+
+          '<div class="lp-progress-head" onclick="toggleLpProg(\''+l.id+'\')">'+
+            '<h4>跟进进展</h4>'+
+            '<span class="lp-prog-count">'+progs.length+' 条</span>'+
+            '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform .2s;" id="lppg_arrow_'+l.id+'"><path d="M6 9l3 3 3-3"/></svg>'+
+          '</div>';
+        if(progs.length > 0){
+          progHtml += '<div class="lp-progress-list" id="lppg_list_'+l.id+'">';
+          sortedProgs.forEach(function(p){
+            progHtml += '<div class="lp-prog-item">'+
+              '<span class="lp-prog-date">'+esc(p.date)+'</span>'+
+              '<span class="lp-prog-text">'+esc(p.content)+'</span>'+
+              '<button class="lp-prog-del" data-lpprog="del" data-lpid="'+l.id+'" data-pid="'+p.id+'" title="删除此条">&times;</button>'+
+            '</div>';
+          });
+          progHtml += '</div>';
+        } else {
+          progHtml += '<div class="lp-progress-list hidden" id="lppg_list_'+l.id+'"></div>';
+        }
+        progHtml += '<div class="lp-prog-add-form" id="lppg_add_'+l.id+'">'+
+          '<input type="date" id="lppg_date_'+l.id+'" value="'+todayStr()+'">'+
+          '<input type="text" id="lppg_text_'+l.id+'" placeholder="记录本次跟进情况…">'+
+          '<button class="icon-btn ok" data-lpprog="add" data-lpid="'+l.id+'">＋ 添加</button>'+
+        '</div></div>';
+      }
       return '<div class="item">'+
         '<div class="it-top"><div class="it-title">'+esc(l.name)+'</div>'+
           '<span class="tag" style="background:'+(LP_COLOR[l.status]||"#9aa6b2")+';color:#fff;">'+l.status+'</span></div>'+
@@ -2556,7 +2624,7 @@ function renderLps(){
           '<button class="icon-btn" data-lp="up" data-id="'+l.id+'" title="上移一位">上移</button>'+
           '<button class="icon-btn" data-lp="down" data-id="'+l.id+'" title="下移一位">下移</button>'+
           '<button class="icon-btn del" data-del="lp" data-id="'+l.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>删除</button>'+
-        '</div></div>';
+        '</div>'+progHtml+'</div>';
     }).join("");
     bindItemBtns(list);
     bindPctInputs();
@@ -2622,6 +2690,14 @@ function bindItemBtns(scope){
       else if(act==="top") lpMoveTop(id);
       else if(act==="up") lpMoveUp(id);
       else if(act==="down") lpMoveDown(id);
+    });
+  });
+  Array.prototype.forEach.call(scope.querySelectorAll("[data-lpprog]"), function(b){
+    b.addEventListener("click", function(e){
+      e.stopPropagation();
+      var lpId=b.getAttribute("data-lpid"); var act=b.getAttribute("data-lpprog");
+      if(act==="add") addLpProgress(lpId);
+      else if(act==="del") deleteLpProgress(lpId, b.getAttribute("data-pid"));
     });
   });
   Array.prototype.forEach.call(scope.querySelectorAll("[data-reserve]"), function(b){
