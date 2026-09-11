@@ -1476,7 +1476,7 @@ function todayEditFormHTML(it){
     var catSel=function(v){ var opts=["募","投","管","退","其它"]; return opts.map(function(o){return '<option'+(v===o?" selected":"")+'>'+o+'</option>';}).join(""); };
     var priSel=function(v){ return '<option value="P0"'+(v==="P0"?" selected":"")+'>P0 紧急</option><option value="P1"'+(v==="P1"?" selected":"")+'>P1 重要</option><option value="P2"'+(v!=="P0"&&v!=="P1"?" selected":"")+'>P2 一般</option>'; };
     var stSel=function(v){ var opts=["todo","doing","done"]; var lab={todo:"待办",doing:"进行中",done:"已完成"}; return opts.map(function(o){return '<option value="'+o+'"'+(v===o?" selected":"")+'>'+lab[o]+'</option>';}).join(""); };
-    var fundOpts=allFunds().map(function(f){ return '<option'+(t.fund===f?" selected":"")+'>'+esc(f)+'</option>'; }).join("");
+    var fundOpts=taskFundOptions(t.fund);
     return '<div class="ti-edit-form">'+
       '<div class="row"><div class="field" style="flex:2 1 240px;"><label>事项标题</label><input id="'+pre+'_title" value="'+esc(t.title)+'"></div>'+
         '<div class="field"><label>类别</label><select id="'+pre+'_cat">'+catSel(t.cat||"其它")+'</select></div>'+
@@ -1551,6 +1551,7 @@ function saveTodayEdit(type, id){
     if(t.status==="done"){ if(!t.doneAt) t.doneAt=todayStr(); } else { delete t.doneAt; }
     if(t.status==="done" && !wasDone){
       try { autoPushTaskToInvProgress(t); } catch(e){ console.warn("autoPushTaskToInvProgress:", e); }
+      try { autoPushTaskToLpProgress(t); } catch(e){ console.warn("autoPushTaskToLpProgress:", e); }
     }
   } else if(type==="lp"){
     var l=state.lps.filter(function(x){return x.id===id;})[0]; if(!l) return;
@@ -1628,6 +1629,22 @@ function autoPushTaskToInvProgress(t){
       }
       break; // 一个任务只归到一个项目
     }
+  }
+}
+/* 将已完成任务自动归集到 LP 跟进清单 → 该 LP 的跟进进展：任务标题含 LP 名称 */
+function autoPushTaskToLpProgress(t){
+  if(!t || t.fund!=="募资跟进" || !t.title) return;
+  var hay=t.title.toLowerCase();
+  var matched=null;
+  for(var i=0;i<state.lps.length;i++){
+    var l=state.lps[i];
+    if(l.name && hay.indexOf(l.name.toLowerCase())>=0){ matched=l; break; }
+  }
+  if(!matched) return;
+  if(!matched.progress) matched.progress=[];
+  var dup = matched.progress.some(function(x){ return x.date===t.doneAt && x.content==="【任务完成】"+t.title && x.src==="task"; });
+  if(!dup){
+    matched.progress.push({id:uid(), date:t.doneAt, content:"【任务完成】"+t.title, src:"task", taskId:t.id});
   }
 }
 function deleteTask(id){ state.tasks=state.tasks.filter(function(x){return x.id!==id;}); if(editTaskId===id) editTaskId=null; save(); renderAll(); toast("已删除"); }
@@ -2499,7 +2516,7 @@ function taskEditFormHTML(t){
   var catSel=function(v){ var opts=["募","投","管","退","其它"]; return opts.map(function(o){return '<option'+(v===o?" selected":"")+'>'+o+'</option>';}).join(""); };
   var priSel=function(v){ return '<option value="P0"'+(v==="P0"?" selected":"")+'>P0 紧急</option><option value="P1"'+(v==="P1"?" selected":"")+'>P1 重要</option><option value="P2"'+(v!=="P0"&&v!=="P1"?" selected":"")+'>P2 一般</option>'; };
   var stSel=function(v){ var opts=["todo","doing","done"]; var lab={todo:"待办",doing:"进行中",done:"已完成"}; return opts.map(function(o){return '<option value="'+o+'"'+(v===o?" selected":"")+'>'+lab[o]+'</option>';}).join(""); };
-  var fundOpts = allFunds().map(function(f){ return '<option'+(t.fund===f?" selected":"")+'>'+esc(f)+'</option>'; }).join("");
+  var fundOpts = taskFundOptions(t.fund);
   return '<div class="item editing">'+
     '<div class="item-edit-form">'+
       '<div class="row"><div class="field" style="flex:2 1 240px;"><label>事项标题</label><input id="te_title_'+t.id+'" value="'+esc(t.title)+'"></div>'+
@@ -2715,9 +2732,11 @@ function renderLps(){
         if(progs.length > 0){
           progHtml += '<div class="lp-progress-list" id="lppg_list_'+l.id+'">';
           sortedProgs.forEach(function(p){
-            progHtml += '<div class="lp-prog-item">'+
+            var isTask = p.src==="task";
+            progHtml += '<div class="lp-prog-item'+(isTask?' task-src':'')+'">'+
               '<span class="lp-prog-date">'+esc(p.date)+'</span>'+
               '<span class="lp-prog-text">'+esc(p.content)+'</span>'+
+              (isTask?'<span class="task-tag">任务</span>':'')+
               '<button class="lp-prog-del" data-lpprog="del" data-lpid="'+l.id+'" data-pid="'+p.id+'" title="删除此条">&times;</button>'+
             '</div>';
           });
@@ -4672,11 +4691,18 @@ function renderAll(){
   populateFundSelects(); renderAlerts(); renderToday(); renderTasks(); renderPipeline(); renderWeeklyReport(); renderMeetings(); renderLps(); renderTemps(); renderReserves(); renderFundingNews(); renderOverview(); bindPctInputs();
 }
 
+/* 待办任务的关联基金下拉：基金列表 + 募资跟进（用于把任务归到 LP 跟进进展） */
+function taskFundOptions(selected){
+  var opts = allFunds().map(function(f){ return '<option'+(f===selected?" selected":"")+'>'+esc(f)+'</option>'; }).join("");
+  opts += '<option'+(selected==="募资跟进"?" selected":"")+'>募资跟进</option>';
+  return opts;
+}
 /* ---------- populate fund selects ---------- */
 function populateFundSelects(){
-  var opts='<option value="">不关联</option>'+allFunds().map(function(f){return '<option value="'+esc(f)+'">'+esc(f)+'</option>';}).join("");
-  document.getElementById("p_fund").innerHTML=opts;
-  document.getElementById("t_fund").innerHTML=opts;
+  var fundOpts='<option value="">不关联</option>'+allFunds().map(function(f){return '<option value="'+esc(f)+'">'+esc(f)+'</option>';}).join("");
+  var taskFundOpts='<option value="">不关联</option>'+allFunds().map(function(f){return '<option value="'+esc(f)+'">'+esc(f)+'</option>';}).join("")+'<option value="募资跟进">募资跟进</option>';
+  document.getElementById("p_fund").innerHTML=fundOpts;
+  document.getElementById("t_fund").innerHTML=taskFundOpts;
 }
 
 /* ---------- bind static ---------- */
