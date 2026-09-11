@@ -193,6 +193,8 @@ button.btn, .btn, input[type="submit"].btn, input[type="button"].btn{background:
 .lp-prog-date{font-weight:600; color:var(--primary); white-space:nowrap; min-width:82px;}
 .lp-prog-text{flex:1; color:var(--text); line-height:1.45; word-break:break-word;}
 .lp-prog-del{background:none; border:none; color:var(--danger); cursor:pointer; font-size:15px; line-height:1; padding:0 2px; opacity:.55; flex-shrink:0;}
+.lp-prog-item.task-src{background:#f0f7ee; border-color:#d4edda;}
+.lp-prog-item .task-tag{font-size:10.5px; background:#2e9e5b; color:#fff; padding:1px 6px; border-radius:8px; font-weight:600; white-space:nowrap; flex-shrink:0;}
 .lp-prog-del:hover{opacity:1;}
 .lp-prog-add-form{margin-top:6px; display:flex; gap:6px; align-items:flex-end;}
 .lp-prog-add-form input[type="date"]{flex:0 0 130px; padding:6px 8px; font-size:13px;}
@@ -1543,9 +1545,13 @@ function saveTodayEdit(type, id){
     t.title=title; t.cat=document.getElementById(pre+"_cat").value;
     t.pri=document.getElementById(pre+"_pri").value;
     t.due=document.getElementById(pre+"_due").value;
-    t.status=document.getElementById(pre+"_status").value;
     var fs=document.getElementById(pre+"_fund"); if(fs) t.fund=fs.value;
+    var wasDone = (t.status==="done");
+    t.status=document.getElementById(pre+"_status").value;
     if(t.status==="done"){ if(!t.doneAt) t.doneAt=todayStr(); } else { delete t.doneAt; }
+    if(t.status==="done" && !wasDone){
+      try { autoPushTaskToInvProgress(t); } catch(e){ console.warn("autoPushTaskToInvProgress:", e); }
+    }
   } else if(type==="lp"){
     var l=state.lps.filter(function(x){return x.id===id;})[0]; if(!l) return;
     var name=document.getElementById(pre+"_name").value.trim();
@@ -1592,10 +1598,37 @@ function bindTodayEditActions(box, items){
 function markTask(id, status){
   var t=state.tasks.filter(function(x){return x.id===id;})[0];
   if(!t) return;
+  var wasDone = t.status==="done";
   if(status==="done"){ t.status="done"; t.doneAt=todayStr(); }
   else { t.status=status; delete t.doneAt; }
+  /* 自动归集：任务完成时 → 同步到对应投资项目的跟进进展 */
+  if(status==="done" && !wasDone && t.fund){
+    try { autoPushTaskToInvProgress(t); } catch(e){ console.warn("autoPushTaskToInvProgress:", e); }
+  }
   save(); renderAll();
   toast(status==="done"?"已标记完成":"状态已更新");
+}
+
+/* 将已完成任务自动归集到对应基金→投资项目→跟进进展 */
+function autoPushTaskToInvProgress(t){
+  if(!t || !t.fund) return;
+  var det = getFundDetail(t.fund);
+  var invs = det.investments||[];
+  if(!invs.length) return;
+  for(var i=0;i<invs.length;i++){
+    var p = invs[i];
+    if(!p.name) continue;
+    /* 匹配规则：任务标题包含项目名称，或任务的 project 字段包含项目名 */
+    if((t.title&&t.title.indexOf(p.name)>=0) || (t.project&&t.project.indexOf(p.name)>=0)){
+      if(!p.invProgressLog) p.invProgressLog=[];
+      /* 避免重复：同一天同一任务不重复添加 */
+      var dup = p.invProgressLog.some(function(x){ return x.date===t.doneAt && x.content===t.title && x.src==="task"; });
+      if(!dup){
+        p.invProgressLog.push({id:uid(), date:t.doneAt, content:"【任务完成】"+t.title, src:"task", taskId:t.id});
+      }
+      break; // 一个任务只归到一个项目
+    }
+  }
 }
 function deleteTask(id){ state.tasks=state.tasks.filter(function(x){return x.id!==id;}); if(editTaskId===id) editTaskId=null; save(); renderAll(); toast("已删除"); }
 function editTask(id){ editTaskId=id; editTempId=null; editLpId=null; editReserveId=null; renderAll(); }
@@ -1608,8 +1641,13 @@ function saveTask(id){
   t.cat=document.getElementById("te_cat_"+id).value;
   t.pri=document.getElementById("te_pri_"+id).value;
   t.due=document.getElementById("te_due_"+id).value;
+  var wasDone = t.status==="done";
   t.status=document.getElementById("te_status_"+id).value;
   if(t.status==="done"){ if(!t.doneAt) t.doneAt=todayStr(); } else { delete t.doneAt; }
+  /* 任务通过编辑表单标记完成时，也自动归集 */
+  if(t.status==="done" && !wasDone){
+    try { autoPushTaskToInvProgress(t); } catch(e){ console.warn("autoPushTaskToInvProgress:", e); }
+  }
   editTaskId=null; save(); renderAll(); toast("已保存");
 }
 
@@ -2338,8 +2376,10 @@ function fundDetailHTML(f){
         var sortedInvProgs = invProgs.slice().sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
         invProgHtml += '<div class="lp-progress-list" id="invpg_list_'+f+'_'+i+'">';
         sortedInvProgs.forEach(function(ip){
-          invProgHtml += '<div class="lp-prog-item">'+
+          var isTask = ip.src==="task";
+          invProgHtml += '<div class="lp-prog-item'+(isTask?' task-src':'')+'">'+
             '<span class="lp-prog-date">'+esc(ip.date)+'</span>'+
+            (isTask?'<span class="task-tag">任务</span>':'')+
             '<span class="lp-prog-text">'+esc(ip.content)+'</span>'+
             '<button class="lp-prog-del" data-invprog="del" data-fund="'+esc(f)+'" data-idx="'+i+'" data-pid="'+ip.id+'" title="删除此条">&times;</button>'+
           '</div>';
