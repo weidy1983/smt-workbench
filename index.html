@@ -1602,9 +1602,10 @@ function markTask(id, status){
   var wasDone = t.status==="done";
   if(status==="done"){ t.status="done"; t.doneAt=todayStr(); }
   else { t.status=status; delete t.doneAt; }
-  /* 自动归集：任务完成时 → 同步到对应投资项目的跟进进展 */
+  /* 自动归集：任务完成时 → 同步到对应投资项目的跟进进展 / LP 跟进进展 */
   if(status==="done" && !wasDone && t.fund){
     try { autoPushTaskToInvProgress(t); } catch(e){ console.warn("autoPushTaskToInvProgress:", e); }
+    try { autoPushTaskToLpProgress(t); } catch(e){ console.warn("autoPushTaskToLpProgress:", e); }
   }
   save(); renderAll();
   toast(status==="done"?"已标记完成":"状态已更新");
@@ -1635,17 +1636,33 @@ function autoPushTaskToInvProgress(t){
 function autoPushTaskToLpProgress(t){
   if(!t || t.fund!=="募资跟进" || !t.title) return;
   var hay=t.title.toLowerCase();
-  var matched=null;
+  /* 取标题中命中的“最长 LP 名称”，避免同一任务含多个 LP 名时归错对象 */
+  var matched=null, maxLen=0;
   for(var i=0;i<state.lps.length;i++){
     var l=state.lps[i];
-    if(l.name && hay.indexOf(l.name.toLowerCase())>=0){ matched=l; break; }
+    var n=(l.name||"").toLowerCase();
+    if(n && hay.indexOf(n)>=0 && n.length>maxLen){ matched=l; maxLen=n.length; }
   }
   if(!matched) return;
   if(!matched.progress) matched.progress=[];
   var dup = matched.progress.some(function(x){ return x.date===t.doneAt && x.content==="【任务完成】"+t.title && x.src==="task"; });
   if(!dup){
-    matched.progress.push({id:uid(), date:t.doneAt, content:"【任务完成】"+t.title, src:"task", taskId:t.id});
+    matched.progress.push({id:uid(), date:t.doneAt||todayStr(), content:"【任务完成】"+t.title, src:"task", taskId:t.id});
   }
+}
+/* 页面加载时一次性补归集：把已“完成”的募资跟进任务补进对应 LP 进展（幂等，去重） */
+function backfillLpProgressFromTasks(){
+  if(!state.tasks || !state.lps) return;
+  var changed=false;
+  state.tasks.forEach(function(t){
+    if(t.status==="done" && t.fund==="募资跟进"){
+      var before=state.lps.reduce(function(s,l){return s+(l.progress?l.progress.length:0);},0);
+      autoPushTaskToLpProgress(t);
+      var after=state.lps.reduce(function(s,l){return s+(l.progress?l.progress.length:0);},0);
+      if(after>before) changed=true;
+    }
+  });
+  if(changed){ try{ save(); }catch(e){ console.warn("backfill save:",e); } }
 }
 function deleteTask(id){ state.tasks=state.tasks.filter(function(x){return x.id!==id;}); if(editTaskId===id) editTaskId=null; save(); renderAll(); toast("已删除"); }
 function editTask(id){ editTaskId=id; editTempId=null; editLpId=null; editReserveId=null; renderAll(); }
@@ -1664,6 +1681,7 @@ function saveTask(id){
   /* 任务通过编辑表单标记完成时，也自动归集 */
   if(t.status==="done" && !wasDone){
     try { autoPushTaskToInvProgress(t); } catch(e){ console.warn("autoPushTaskToInvProgress:", e); }
+    try { autoPushTaskToLpProgress(t); } catch(e){ console.warn("autoPushTaskToLpProgress:", e); }
   }
   editTaskId=null; save(); renderAll(); toast("已保存");
 }
@@ -4775,12 +4793,13 @@ window.onerror = function(msg, url, line, col, err){
       seed();
     }
     delete state.weekCursor; // 每次打开/刷新都默认显示本周
+    backfillLpProgressFromTasks(); // 补归集已完成的募资跟进任务
     renderAll();
     // 启动后尝试从云端拉取（不阻塞首屏）：云端数据到达后覆盖并重新渲染
     if(SB_ENABLED()){
       setSync("同步中…");
       ghPull().then(function(ok){
-        if(ok){ renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
+        if(ok){ backfillLpProgressFromTasks(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
         else { setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
       });
       ghStartPolling(); // 启动 15 秒轮询，跨设备准实时同步
