@@ -1201,6 +1201,7 @@ async function ghPoll(){
       if(JSON.stringify(incoming) === JSON.stringify(state)){ cloudUpdatedAt = rows[0].updated_at; return; }
       cloudUpdatedAt = rows[0].updated_at;
       state = incoming;
+      delete state.weekCursor; // 云端同步后也默认显示本周
       try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
       renderAll();
       setSync("已同步云端更新 "+new Date().toLocaleTimeString(), true);
@@ -4600,6 +4601,7 @@ window.onerror = function(msg, url, line, col, err){
     if(!load() || (state.tasks.length+state.pipeline.length+state.meetings.length+state.lps.length===0 && !state.seeded)){
       seed();
     }
+    delete state.weekCursor; // 每次打开/刷新都默认显示本周
     renderAll();
     // 启动后尝试从云端拉取（不阻塞首屏）：云端数据到达后覆盖并重新渲染
     if(SB_ENABLED()){
