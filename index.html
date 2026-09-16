@@ -1053,7 +1053,9 @@ var LP_COLOR = {"接触":"#9aa6b2","尽调":"#2e6ea8","签约":"#157a8a","打款
 var LP_ACTIVE_STATUSES = ["接触","尽调","签约","打款","退出"];
 var lpView = "all"; // all | active | success | abandoned
 
-var state = { tasks:[], pipeline:[], meetings:[], lps:[], temps:[], reserves:[], funds:[], customFunds:[], fundOrder:[], fundDetails:{}, weekCursor:"", seeded:false, lpManualOrder:false, party:{} };
+var state = { tasks:[], pipeline:[], meetings:[], lps:[], temps:[], reserves:[], funds:[], customFunds:[], fundOrder:[], fundDetails:{}, seeded:false, lpManualOrder:false, party:{} };
+/* 会议周报的周游标：仅存在于当前页面会话，不写入 state，故不落 localStorage / 云端，刷新必回本周 */
+var wrCursor = "";
 var currentFund = "全部";
 var dragSrc = null;
 
@@ -1213,7 +1215,6 @@ async function ghPoll(){
       if(JSON.stringify(incoming) === JSON.stringify(state)){ cloudUpdatedAt = rows[0].updated_at; return; }
       cloudUpdatedAt = rows[0].updated_at;
       state = incoming;
-      delete state.weekCursor; // 云端同步后也默认显示本周
       try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
       renderAll();
       setSync("已同步云端更新 "+new Date().toLocaleTimeString(), true);
@@ -1256,7 +1257,6 @@ function normalize(d){
       set.forEach(function(f){ if(co.indexOf(f)<0) ord.push(f); });
       return ord;
     })(),
-    weekCursor: d.weekCursor ? ""+d.weekCursor : todayStr(),
     seeded: !!d.seeded,
     lpManualOrder: !!d.lpManualOrder,
     fundingFollow: Array.isArray(d.fundingFollow)?d.fundingFollow:[],
@@ -2585,7 +2585,7 @@ function taskItemHTML(t){
 }
 
 function renderWeeklyReport(){
-  var ref = state.weekCursor || todayStr();
+  var ref = wrCursor || todayStr();
   var wr=weekRange(ref);
   function inW(d){ if(!d) return false; var x=parseDate(d); return x>=wr.start && x<=wr.end; }
   var doneTasks=state.tasks.filter(function(t){return t.status==="done"&&inW(t.doneAt);});
@@ -5220,10 +5220,10 @@ function bindListSearch(){
 }
 
 /* ---------- 周报导航 ---------- */
-document.getElementById("btnWeekPrev2").addEventListener("click", function(){ state.weekCursor=addDaysStr(state.weekCursor||todayStr(),-7); renderWeeklyReport(); });
-document.getElementById("btnWeekNext2").addEventListener("click", function(){ state.weekCursor=addDaysStr(state.weekCursor||todayStr(),7); renderWeeklyReport(); });
-document.getElementById("btnWeekThis").addEventListener("click", function(){ state.weekCursor=todayStr(); renderWeeklyReport(); });
-document.getElementById("btnWeekDate").addEventListener("click", function(){ var v=document.getElementById("weekDatePick").value; if(!v){ toast("请先选择日期"); return; } state.weekCursor=v; renderWeeklyReport(); });
+document.getElementById("btnWeekPrev2").addEventListener("click", function(){ wrCursor=addDaysStr(wrCursor||todayStr(),-7); renderWeeklyReport(); });
+document.getElementById("btnWeekNext2").addEventListener("click", function(){ wrCursor=addDaysStr(wrCursor||todayStr(),7); renderWeeklyReport(); });
+document.getElementById("btnWeekThis").addEventListener("click", function(){ wrCursor=todayStr(); renderWeeklyReport(); });
+document.getElementById("btnWeekDate").addEventListener("click", function(){ var v=document.getElementById("weekDatePick").value; if(!v){ toast("请先选择日期"); return; } wrCursor=v; renderWeeklyReport(); });
 
 /* ---------- init ---------- */
 /* 全局错误兜底：初始化或运行时出错时给用户可见提示 */
@@ -5260,7 +5260,7 @@ window.onerror = function(msg, url, line, col, err){
     if(!load() || (state.tasks.length+state.pipeline.length+state.meetings.length+state.lps.length===0 && !state.seeded)){
       seed();
     }
-    delete state.weekCursor; // 每次打开/刷新都默认显示本周
+    wrCursor = ""; // 每次打开/刷新都默认显示本周（会话级变量，不持久化）
     backfillLpProgressFromTasks(); // 补归集已完成的募资跟进任务
     renderAll();
     // 启动后尝试从云端拉取（不阻塞首屏）：云端数据到达后覆盖并重新渲染
