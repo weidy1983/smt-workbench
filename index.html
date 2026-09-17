@@ -1069,7 +1069,7 @@ function addDaysStr(s,n){ var d=parseDate(s)||new Date(); d.setDate(d.getDate()+
 function fmtYMD(s){ if(!s) return "—"; var p=s.split("-"); return p[0]+"年"+p[1]+"月"+p[2]+"日"; }
 function fmtMD(s){ return fmtYMD(s); }
 function fmtWeek(s){ if(!s) return ""; var d=parseDate(s); var w=["周日","周一","周二","周三","周四","周五","周六"]; return w[d.getDay()]; }
-function daysUntil(s){ if(!s) return null; var d=parseDate(s); var t=new Date(); t.setHours(0,0,0,0); d.setHours(0,0,0,0); return Math.round((d-t)/86400000); }
+function daysUntil(s){ if(!s) return null; var d=parseDate(s); if(!d) return null; var t=new Date(); t.setHours(0,0,0,0); d.setHours(0,0,0,0); return Math.round((d-t)/86400000); }
 function isOverdue(s){ var n=daysUntil(s); return n!==null && n<0; }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
 function fmtDateTime(v){
@@ -1312,6 +1312,10 @@ function seed(){
   state.funds = FUNDS.slice();
   state.fundOrder = FUNDS.slice();
   state.fundDetails = {};
+  state.fundingFollow = [];
+  state.fundingIgnore = [];
+  state.party = {};
+  state.alerts = {};
   state.seeded = true;
   // 2026-09-08 修复：seed() 只写本地缓存，绝不自动推送云端，避免新设备/无痕窗口把示例数据覆盖真实数据。
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); flashSync(); }
