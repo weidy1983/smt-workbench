@@ -1053,7 +1053,7 @@ var LP_COLOR = {"接触":"#9aa6b2","尽调":"#2e6ea8","签约":"#157a8a","打款
 var LP_ACTIVE_STATUSES = ["接触","尽调","签约","打款","退出"];
 var lpView = "all"; // all | active | success | abandoned
 
-var state = { tasks:[], pipeline:[], meetings:[], lps:[], temps:[], reserves:[], funds:[], customFunds:[], fundOrder:[], fundDetails:{}, seeded:false, lpManualOrder:false, party:{} };
+var state = { tasks:[], pipeline:[], meetings:[], lps:[], temps:[], reserves:[], funds:[], customFunds:[], fundOrder:[], fundDetails:{}, seeded:false, lpManualOrder:false, fundingFollow:[], fundingIgnore:[], party:{}, alerts:{} };
 /* 会议周报的周游标：仅存在于当前页面会话，不写入 state，故不落 localStorage / 云端，刷新必回本周 */
 var wrCursor = "";
 var currentFund = "全部";
