@@ -1064,7 +1064,19 @@ function uid(){ return Date.now().toString(36) + Math.random().toString(36).slic
 function pad(n){ return n<10 ? "0"+n : ""+n; }
 function todayStr(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
 function nowStr(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+" "+pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds()); }
-function parseDate(s){ if(!s) return null; var p=s.split("-"); if(p.length!==3) return null; return new Date(+p[0],+p[1]-1,+p[2]); }
+function parseDate(s){
+  // 2026-09-17 加固：兼容 2026-09-18 / 2026/9/18 / 2026.9.18 / 20260918 / 2026年9月18日 / 9月18日（按当年）
+  // 非法或非日期文本（如"长期有效""常态化征集""待定"）一律返回 null，交由调用方守卫处理。
+  if(!s) return null;
+  if(s instanceof Date) return isNaN(s.getTime())?null:new Date(s.getTime());
+  s=String(s).trim();
+  var m=s.match(/^(\d{4})\s*[-/.]?\s*(\d{1,2})\s*[-/.]?\s*(\d{1,2})/);
+  if(!m) m=s.match(/^(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})/);
+  if(m){ var d=new Date(+m[1],+m[2]-1,+m[3]); return isNaN(d.getTime())?null:d; }
+  var m2=s.match(/^(\d{1,2})\s*[-/.月]\s*(\d{1,2})/);
+  if(m2){ var d2=new Date(new Date().getFullYear(),+m2[1]-1,+m2[2]); return isNaN(d2.getTime())?null:d2; }
+  return null;
+}
 function addDaysStr(s,n){ var d=parseDate(s)||new Date(); d.setDate(d.getDate()+n); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
 function fmtYMD(s){ if(!s) return "—"; var p=s.split("-"); return p[0]+"年"+p[1]+"月"+p[2]+"日"; }
 function fmtMD(s){ return fmtYMD(s); }
@@ -3264,7 +3276,7 @@ function clearSample(){
   save(); renderAll(); toast("已清除预置示例数据");
 }
 function clearAll(){
-  state={tasks:[],pipeline:[],meetings:[],lps:[],temps:[],reserves:[],funds:FUNDS.slice(),customFunds:[],fundOrder:FUNDS.slice(),fundDetails:{},seeded:true,lpManualOrder:false,party:{}};
+  state={tasks:[],pipeline:[],meetings:[],lps:[],temps:[],reserves:[],funds:FUNDS.slice(),customFunds:[],fundOrder:FUNDS.slice(),fundDetails:{},seeded:true,lpManualOrder:false,fundingFollow:[],fundingIgnore:[],party:{},alerts:{}};
   save(); renderAll(); toast("已清空全部数据");
   document.getElementById("clearModal").classList.add("hidden");
 }
@@ -5365,7 +5377,21 @@ function fundNewsToLpAll(){
 }
 
 function renderAll(){
-  populateFundSelects(); renderAlerts(); renderToday(); renderTasks(); renderPipeline(); renderWeeklyReport(); renderMeetings(); renderLps(); renderTemps(); renderReserves(); renderFundingNews(); renderOverview(); bindPctInputs();
+  // 2026-09-17 加固：各模块独立 try/catch。任一模块数据异常（如非法日期、字段缺失）
+  // 只降级该模块并写控制台，不再中断整页初始化，避免"整页初始化失败"。
+  var steps=[
+    ["populateFundSelects",populateFundSelects],["renderAlerts",renderAlerts],["renderToday",renderToday],
+    ["renderTasks",renderTasks],["renderPipeline",renderPipeline],["renderWeeklyReport",renderWeeklyReport],
+    ["renderMeetings",renderMeetings],["renderLps",renderLps],["renderTemps",renderTemps],
+    ["renderReserves",renderReserves],["renderFundingNews",renderFundingNews],["renderOverview",renderOverview],
+    ["bindPctInputs",bindPctInputs]
+  ];
+  var fails=[];
+  for(var i=0;i<steps.length;i++){
+    try{ steps[i][1](); }
+    catch(e){ fails.push(steps[i][0]); console.error("模块渲染失败："+steps[i][0], e); }
+  }
+  if(fails.length && window.toast) toast("部分模块渲染异常："+fails.join("、")+"（其余功能可正常使用）", 6000);
 }
 
 /* 待办任务的关联基金下拉：基金列表 + 募资跟进（用于把任务归到 LP 跟进进展） */
