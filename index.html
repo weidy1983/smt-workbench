@@ -1683,6 +1683,7 @@ function backfillLpProgressFromTasks(){
 
 /* 一次性迁移：向「储备项目清单」注入指定项目（按固定 id 去重，幂等；每次加载在云端同步之后执行，确保不被 ghPull 覆盖；删除后不再自动补回） */
 function migrateReserves(){
+  try{ if(localStorage.getItem("wb_migrate_reserves_v1")) return; }catch(e){} // 已迁移过则不再自动补回（尊重用户手动删除）
   if(!state.reserves) state.reserves=[];
   var seed=[
     {id:"res-linghu-2026", name:"领湖智能", est:"", loc:"肇庆（落地）", ind:"具身智能/机器人", prod:"具身机器人关节模组电机", round:"本轮（计划融资5000万）", inv:0, val:40000,
