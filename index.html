@@ -1680,6 +1680,24 @@ function backfillLpProgressFromTasks(){
   });
   if(changed){ try{ save(); }catch(e){ console.warn("backfill save:",e); } }
 }
+
+/* 一次性迁移：向「储备项目清单」注入指定项目（按固定 id 去重，幂等；每次加载在云端同步之后执行，确保不被 ghPull 覆盖；删除后不再自动补回） */
+function migrateReserves(){
+  if(!state.reserves) state.reserves=[];
+  var seed=[
+    {id:"res-linghu-2026", name:"领湖智能", est:"", loc:"肇庆（落地）", ind:"具身智能/机器人", prod:"具身机器人关节模组电机", round:"本轮（计划融资5000万）", inv:0, val:40000,
+      logic:"具身机器人关节模组电机。去年营收7000万，今年预计1.6亿、净利润1400万，上半年已实现8000万；成长性突出。海愿资本领投3000万已交割；本轮计划融资5000万、估值4亿，尚余1500-2000万跟投额度。海愿资本刚完成尽调、将赴洛社；下一轮5000万（待今年财报，预计明年Q1交割）可落生产。",
+      land:"落地肇庆。本轮跟投1500-2000万可落研发+销售中心+开票（暂落不了生产）；提前锁定下一轮地方政府产业投资、提前拿订单。下一轮5000万（明年Q1交割）可落生产。"},
+    {id:"res-yinghe-2026", name:"硬核永动（北京）航空航天科技有限责任公司", est:"2025-12-18", loc:"北京（总部）；计划惠山区落地总部+智造基地", ind:"航空航天/航空发动机", prod:"微小型军民两用涡喷发动机（YH40/YH80/YH125/YH150等）", round:"本轮（惠山各主体合计≤2500万）", inv:2500, val:66000,
+      logic:"微小型军民两用涡喷发动机，全链路自主可控、无进口依赖；4款型号定型、千余架次飞行验证，对标捷克PBS-TJ；卡位靶机/巡飞弹/低空经济三大高景气赛道，国产替代刚性需求；核心团队源自金朋达（头部靶机企业），含航发体系专家（国务院津贴总工艺师等）。本轮惠山各主体合计≤2500万（洛社≤1500万、科创集团≤1000万），苏民嘉禾可借曦和等基金参与。据项目方材料估值约6.6亿。风险：与金朋达关联交易/业财独立性、股权代持（实控人阮波）、实控人或有债务约2.3亿，须将代持还原、规范核算、知识产权协议列为交割先决条件。",
+      land:"计划本轮融资完成后于惠山区落地总部并建设微小型航空发动机制造基地（项目方可研：总投资3.5亿、用地60-80亩、年产1万台整机）。与惠山航空航天产业集群形成'动力+整机'协同，带动本地精密加工/特种材料/电子元器件配套集聚，契合惠山强链补链招商导向。"}
+  ];
+  var has={}; state.reserves.forEach(function(r){ has[r.id]=true; });
+  var added=0;
+  seed.forEach(function(s){ if(!has[s.id]){ state.reserves.push(s); added++; } });
+  if(added>0){ try{ save(); }catch(e){} }
+  try{ localStorage.setItem("wb_migrate_reserves_v1","1"); }catch(e){}
+}
 function deleteTask(id){ state.tasks=state.tasks.filter(function(x){return x.id!==id;}); if(editTaskId===id) editTaskId=null; save(); renderAll(); toast("已删除"); }
 function editTask(id){ editTaskId=id; editTempId=null; editLpId=null; editReserveId=null; renderAll(); }
 function cancelEditTask(){ editTaskId=null; renderAll(); }
@@ -5766,11 +5784,12 @@ window.onerror = function(msg, url, line, col, err){
     if(SB_ENABLED()){
       setSync("同步中…");
       ghPull().then(function(ok){
-        if(ok){ backfillLpProgressFromTasks(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
-        else { setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
+        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
+        else { migrateReserves(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
       });
       ghStartPolling(); // 启动 15 秒轮询，跨设备准实时同步
     } else {
+      migrateReserves(); renderAll();
       setSync("本地模式 · 点此开启云端同步", false);
     }
     // 募资资讯：先用内置快照秒开，随后静默拉取云端最新版本（与党建主题库一致）；云端版本不低于内置则采用云端
