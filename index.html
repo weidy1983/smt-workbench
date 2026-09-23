@@ -870,17 +870,8 @@ html[data-bp="mobile"] .pg-topic-lib, html[data-bp="small"] .pg-topic-lib{grid-t
           </div>
         </details>
       </div>
-      <div data-page-node-id="lmpeiyklsSTrqrX8aqW6Y5" class="card" style="background:linear-gradient(135deg,#eef4ff,#f7faff); border-color:#cfe0ff">
-        <div data-page-node-id="q9jcYQssuxhGSra1F4zAb8" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
-          <div data-page-node-id="IRJUffSBy39NhBQLiFPKZz" style="flex:1 1 200px; min-width:0">
-            <h3 data-page-node-id="lXw0GGoVCazgNlETJibfF6" style="margin:0 0 4px"><svg data-page-node-id="P3SHyF8eLq1xQuw5ksPI1b" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" style="width:18px; height:18px; vertical-align:-3px"><path data-page-node-id="1IuZlioXSpsNDAykwaOVpY" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path data-page-node-id="B3NgcOhYsxijXuqUF7EnhF" d="M7 10l5 5 5-5"/><path data-page-node-id="t5Az5WfelHCvYwCNUMLBoa" d="M12 15V3"/></svg><!--pnid:5kMlMZhYMnxTT2RMUHroOZ-->从本地文件导入储备项目</h3>
-            <p data-page-node-id="MjcHwwXolZrtWyc1U4SSw2" style="font-size:12px; color:#5b6b7b; margin:0"><!--pnid:T65jDuAwYRkeaNDlXfyg4C-->选择 Word/Excel/PDF 等目标文件，按企业名称去重导入。网页版目前可直接解析 <b data-page-node-id="plX1wG6DyuzfsgysYAatnP"><!--pnid:ZJDjIt9FllNYOg4WwLG8Ki-->CSV</b><!--pnid:9kEHEKQnlfhVHgV9n13WGt-->；Excel/Word/PDF 请先在本地另存为 CSV(UTF-8) 后再上传。</p>
-          </div>
-          <div data-page-node-id="9qrzS0j6BdZ547VFZFZPjz" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
-            <input data-page-node-id="6RJAUCMfqoLaFG2YoATZTg" accept=".csv,.xlsx,.xls,.doc,.docx,.pdf" id="importProjectFile" type="file" style="display:none">
-            <button data-page-node-id="WSApioXOsOhM1Z3ykPLlvO" class="btn" id="btnImportReserves" style="white-space:nowrap"><svg data-page-node-id="16YZ4h0KrHGxDO9aWGSgJ4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="yy46iUhB10PgTXBeKAsPqq" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path data-page-node-id="UXyI0PZWxIVeqDt9qpbAeS" d="M7 10l5 5 5-5"/><path data-page-node-id="EPYoLwrCKxmw1hiqYxItsM" d="M12 15V3"/></svg><!--pnid:EG77GxS2vnVUm5FqyorJen-->选择文件</button>
-          </div>
-        </div>
+      <div class="card" style="background:linear-gradient(135deg,#f3f9ff,#f7fbf7); border-color:#cfe0ff">
+        <p style="font-size:13px; color:#3d5568; margin:0; line-height:1.7"><b>提示：</b>如需增加储备项目，可以直接把 BP/尽调/项目建议书（pptx/docx/pdf）发我，说「<b>提炼到储备项目</b>」，我会自动跑抽取 → 填 10 字段 → 给你审核表确认 → 生成 seed 注入工作台并部署。</p>
       </div>
 
       <div data-page-node-id="MRTHwtweNqtK3ded9zqoLY" class="card">
@@ -3289,90 +3280,6 @@ function addReserve(){
   setVal("r_prod",""); setVal("r_round",""); setVal("r_inv",""); setVal("r_val","");
   setVal("r_logic",""); setVal("r_land","");
   renderAll(); toast("已添加储备项目");
-}
-
-function triggerImportReserveFile(){ document.getElementById("importProjectFile").click(); }
-function onImportReserveFileChange(e){
-  var file=e.target.files[0]; if(!file) return;
-  importReserveFile(file);
-  e.target.value="";
-}
-function importReserveFile(file){
-  var name=(file.name||"").toLowerCase();
-  if(name.endsWith(".csv")){
-    var reader=new FileReader();
-    reader.onload=function(ev){ importReserveCSV(ev.target.result); };
-    reader.onerror=function(){ toast("读取 CSV 失败"); };
-    reader.readAsText(file);
-  } else {
-    var msg="网页版目前仅支持直接解析 CSV 文件。\n\n";
-    msg+="如需导入 Excel/Word/PDF，请先在本地将其「另存为 CSV(UTF-8)」后再上传；\n";
-    msg+="也可直接把该文件发给我，我帮你后台解析后导入。";
-    toast(msg, 5000);
-  }
-}
-function importReserveCSV(text){
-  var rows=parseCSV(text);
-  if(rows.length<2){ toast("CSV 内容为空或格式不对"); return; }
-  var headers=rows[0].map(function(h){ return (h||"").trim().replace(/^\uFEFF/,""); });
-  var idx={name:findHeader(headers,["企业名称","项目名称","公司","企业","名称","name","company"]),
-           est:findHeader(headers,["成立时间","成立日期","创立时间","established","founded"]),
-           loc:findHeader(headers,["注册地","地区","所在地","注册地址","location","地区/城市"]),
-           ind:findHeader(headers,["所属行业","行业","赛道","领域","分类","industry","sector"]),
-           prod:findHeader(headers,["核心产品","产品","主营业务","业务","产品/服务","product","core"]),
-           round:findHeader(headers,["融资轮次","轮次","轮","round"]),
-           inv:findHeader(headers,["拟投金额","拟投资金额","投资金额","计划投资","拟投（万元）","investment","拟投金额（万元）"]),
-           val:findHeader(headers,["初步估值","估值","投前估值","投后估值","估值（万元）","valuation","预计估值"]),
-           logic:findHeader(headers,["投资逻辑","投资亮点","投资逻辑&投资亮点","投资逻辑和投资亮点","项目亮点","logic","highlights","投资逻辑&亮点"]),
-           land:findHeader(headers,["落地内容","落地诉求","可否落地","落地情况","财务数据","估值及融资","落地","landing","融资计划","融资需求"])};
-  if(idx.name<0){ toast("未识别到企业名称列，请检查 CSV 表头"); return; }
-  var existing={}; state.reserves.forEach(function(r){ existing[r.name]=true; });
-  var added=0, skipped=0, total=0;
-  for(var i=1;i<rows.length;i++){
-    var row=rows[i];
-    if(row.length<=idx.name) continue;
-    var name=(row[idx.name]||"").trim();
-    if(!name) continue;
-    total++;
-    if(existing[name]){ skipped++; continue; }
-    var est=(idx.est>=0?row[idx.est]:"")||"";
-    if(est && !isNaN(Number(est))){
-      var n=Number(est);
-      if(n>30000 && n<60000){ var d=new Date((n-25569)*86400000); if(!isNaN(d)) est=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
-    }
-    function numCell(c){ var v=(c||"").trim().replace(/,/g,""); if(v==="" || v==="—" || v==="-") return 0; var n=parseFloat(v); return isNaN(n)?0:n; }
-    state.reserves.push({id:uid(), name:name, est:(est+"").trim(), loc:(idx.loc>=0?row[idx.loc]:"")||"", ind:(idx.ind>=0?row[idx.ind]:"")||"", prod:(idx.prod>=0?row[idx.prod]:"")||"", round:(idx.round>=0?row[idx.round]:"")||"", inv:numCell(idx.inv>=0?row[idx.inv]:""), val:numCell(idx.val>=0?row[idx.val]:""), logic:(idx.logic>=0?row[idx.logic]:"")||"", land:(idx.land>=0?row[idx.land]:"")||"", status:"储备中", progs:[], sample:false});
-    existing[name]=true; added++;
-  }
-  save(); renderAll();
-  toast("已解析 "+total+" 行：导入 "+added+" 个，跳过重复 "+skipped+" 个");
-}
-function findHeader(headers, keys){
-  for(var i=0;i<headers.length;i++){
-    var h=headers[i].toLowerCase();
-    for(var k=0;k<keys.length;k++) if(h.indexOf(keys[k].toLowerCase())>=0) return i;
-  }
-  return -1;
-}
-function parseCSV(text){
-  var rows=[], row=[], cell="", inQ=false, i=0;
-  function flush(){ row.push(cell); cell=""; }
-  while(i<text.length){
-    var c=text[i], n=text[i+1];
-    if(inQ){
-      if(c==='"' && n==='"'){ cell+='"'; i+=2; }
-      else if(c==='"'){ inQ=false; i++; }
-      else { cell+=c; i++; }
-    } else {
-      if(c==='"'){ inQ=true; i++; }
-      else if(c===","){ flush(); i++; }
-      else if(c==="\r" && n==="\n"){ flush(); rows.push(row); row=[]; i+=2; }
-      else if(c==="\n" || c==="\r"){ flush(); rows.push(row); row=[]; i++; }
-      else { cell+=c; i++; }
-    }
-  }
-  flush(); if(row.length>0) rows.push(row);
-  return rows;
 }
 
 /* ---------- backup ---------- */
@@ -5858,8 +5765,6 @@ document.getElementById("btnAddMeeting").addEventListener("click", addMeeting);
 document.getElementById("btnAddLp").addEventListener("click", addLp);
 document.getElementById("btnAddTemp").addEventListener("click", addTemp);
 document.getElementById("btnAddReserve").addEventListener("click", addReserve);
-document.getElementById("btnImportReserves").addEventListener("click", triggerImportReserveFile);
-document.getElementById("importProjectFile").addEventListener("change", onImportReserveFileChange);
 document.getElementById("btnExport").addEventListener("click", exportData);
 document.getElementById("btnImport").addEventListener("click", function(){ document.getElementById("importFile").click(); });
 document.getElementById("importFile").addEventListener("change", function(e){ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=""; });
