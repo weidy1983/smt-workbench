@@ -1709,6 +1709,27 @@ function migrateReserves(){
   if(added>0){ try{ save(); }catch(e){} }
   try{ localStorage.setItem("wb_migrate_reserves_v1","1"); }catch(e){}
 }
+function migrateReserves2(){
+  try{ if(localStorage.getItem("wb_migrate_reserves_v2")) return; }catch(e){} // 已迁移过则不再自动补回（尊重用户手动删除）
+  if(!state.reserves) state.reserves=[];
+  var seed=[
+    {id:"res-pnj-2026", name:"派恩杰半导体（浙江）有限公司", est:"2018-09", loc:"宁波前湾新区（总部）；深圳/上海/杭州分支", ind:"半导体/碳化硅(SiC)功率半导体", prod:"8英寸SiC IDM（晶圆+封装全产业链）；碳化硅SBD/MOSFET/模块", round:"B轮（本轮融资总额10亿元）", inv:4000, val:0, status:"储备中",
+      logic:"碳化硅(SiC)功率半导体，8英寸IDM（晶圆+封装全产业链），国家级专精特新小巨人。2018年9月成立，120+专利，3.2μm全球最小元胞、铜工艺国内首发；客户涵盖比亚迪等车企+AIDC（维谛技术，在手订单5亿+），2026单月收入超3000万，受益行业周期反转与AI算力新增量。已通过银河创新风控，项目成熟。本轮苏民嘉禾侧需投1亿元（协同创新基金6000万+拟另募4000万，inv暂记缺口4000万待确认）。风险：8英寸产能爬坡/良率不及预期、客户集中、行业周期波动、海外地缘（China for China策略）。",
+      land:"总部宁波前湾新区，分支深圳/上海/杭州；第二阶段扩产含海外模组封装（东南亚等）。协同创新基金（惠山侧产业基金）拟投6000万，苏民嘉禾可借曦和等基金参与剩余约4000万份额；项目总部在宁波，可结合惠山汽车/半导体产业链探讨产业协同与返投可能（材料未明确落地条款，待补充）。",
+      progs:[{id:"pg-pnj-1", date:"2026-09-23", content:"已通过银河创新风控，项目较为成熟；本轮需投资1亿元，协同创新基金可投6000万元，尚需另募4000万元。"}]},
+    {id:"res-huygens-2026", name:"上海慧之耕具身智能科技有限公司（Huygens AI）", est:"2026-05", loc:"上海浦东新区张江科学城（总部）；山东枣庄中试工厂", ind:"具身智能/农业机器人", prod:"多功能农用机器人 Model A0（纯电履带全地形、一机多用：割草/旋耕/喷药/转运等）", round:"早期（天使轮/Pre-A，金额待补充）", inv:0, val:0, status:"储备中",
+      logic:"聚焦农业/户外场景的多功能具身智能农用机器人，对标农业界特斯拉数据飞轮（硬件×软件×数据）。2026年5月成立，注册资本300万，总部上海张江+山东枣庄中试工厂（产能1000台/年）。核心产品Model A0纯电履带全地形、一机多用（2分钟快换割草/旋耕等）、无人化，ROI突出（光伏除草当年回报200%+）。创始人魏锋为清华本硕、可可资本创始合伙人、资深硬科技投资人（福布斯中国最佳创投人）；团队具汽车/装备/农机背景。政策顺风：2026中央一号文件首提智慧农业。风险：极早期（成立仅数月）、尚无规模化收入与量产交付验证、赛道竞争分散（50+企业）、纯电占比低、供应链与品控待验证、估值与融资条款未披露。",
+      land:"总部上海张江科学城，中试生产基地山东枣庄（3000㎡，产能1000台/年）。材料未见在惠山/玉环/肇庆落地安排；可结合地方农业/设施农业场景（如玉环周边）探讨示范应用与产业基地可能（待补充）。"},
+    {id:"res-jiaan-2026", name:"佳安智能（深圳市南科佳安机器人科技有限公司）", est:"2021-02", loc:"深圳（总部）；玉环芦浦南湾智谷园区（拟落地精砺智造基地）", ind:"工业具身智能/机器人", prod:"磨抛机器人工作站、复合机器人、具身/人形机器人（全球首款可量产打螺丝人形机器人）", round:"B轮（本轮融资需求1.5亿元；启迪政府产投拟投1亿；玉环基地总投资1.2亿）", inv:0, val:0, status:"储备中",
+      logic:"工业具身机器人独角兽（国内第一梯队），核心全栈自研、数百万行代码、90+核心专利、国家级科研背书；全球首款可量产打螺丝人形机器人，落地吉利汽车（全球汽车行业首个人形机器人商业落地）、蓝思科技（果链首个ML+机器人整厂）、铂力特/成飞等头部客户。2026预计营收2.5亿+、订单3亿+，CAGR 140%+，2029拟IPO。玉环精砺智造基地总投资1.2亿（第一阶段5000万/第二阶段7000万），落玉环芦浦南湾智谷，辐射长三角。B轮融资需求1.5亿元（启迪政府产投拟投1亿）。风险：高估值/赛道竞争加剧（Figure/特斯拉/思灵）、量产交付验证、人形商业化进度、头部客户依赖、玉环基地租赁+政府补贴依赖、IPO不确定性。",
+      land:"玉环芦浦南湾智谷园区（长三角精砺智造基地），分两阶段：2026-2027第一阶段投资约5000万、租赁3000㎡、建年产1000台组装基地；2028-2029第二阶段投资7000万、新增6000㎡、建数字化工厂+出口交付中心。与玉环人工智能+制造、10亿产业基金、汽摩配4000+企业产业链高度契合，可贡献产值/税收/就业，带动本地零部件进入机器人供应链。苏民嘉禾可结合玉环航运基金/玉环国投参与玉环基地或B轮。"}
+  ];
+  var has={}; state.reserves.forEach(function(r){ has[r.id]=true; if(!Array.isArray(r.progs)) r.progs=[]; });
+  var added=0;
+  seed.forEach(function(s){ if(!has[s.id]){ s.progs=s.progs||[]; state.reserves.push(s); added++; } });
+  if(added>0){ try{ save(); }catch(e){} }
+  try{ localStorage.setItem("wb_migrate_reserves_v2","1"); }catch(e){}
+}
 function deleteTask(id){ state.tasks=state.tasks.filter(function(x){return x.id!==id;}); if(editTaskId===id) editTaskId=null; save(); renderAll(); toast("已删除"); }
 function editTask(id){ editTaskId=id; editTempId=null; editLpId=null; editReserveId=null; renderAll(); }
 function cancelEditTask(){ editTaskId=null; renderAll(); }
@@ -5913,12 +5934,12 @@ window.onerror = function(msg, url, line, col, err){
     if(SB_ENABLED()){
       setSync("同步中…");
       ghPull().then(function(ok){
-        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
-        else { migrateReserves(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
+        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
+        else { migrateReserves(); migrateReserves2(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
       });
       ghStartPolling(); // 启动 15 秒轮询，跨设备准实时同步
     } else {
-      migrateReserves(); renderAll();
+      migrateReserves(); migrateReserves2(); renderAll();
       setSync("本地模式 · 点此开启云端同步", false);
     }
     // 募资资讯：先用内置快照秒开，随后静默拉取云端最新版本（与党建主题库一致）；云端版本不低于内置则采用云端
