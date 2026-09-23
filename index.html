@@ -2756,7 +2756,7 @@ function renderLps(){
       var progs = (l.progress||[]);
       var progHtml = '';
       if(progs.length > 0 || true){
-        var sortedProgs = progs.slice().sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
+        var sortedProgs = progs.slice().sort(function(a,b){ return (a.date||"").localeCompare(b.date||""); });
         progHtml = '<div class="lp-progress">'+
           '<div class="lp-progress-head" onclick="toggleLpProg(\''+l.id+'\')">'+
             '<h4>跟进进展</h4>'+
