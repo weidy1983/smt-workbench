@@ -1267,7 +1267,7 @@ function normalize(d){
     meetings: Array.isArray(d.meetings)?d.meetings:[],
     lps: Array.isArray(d.lps)?d.lps:[],
     temps: Array.isArray(d.temps)?d.temps:[],
-    reserves: Array.isArray(d.reserves)?d.reserves:[],
+    reserves: (Array.isArray(d.reserves)?d.reserves:[]).map(function(r){ if(r && !Array.isArray(r.progs)) r.progs=[]; return r; }),
     fundDetails: (d.fundDetails && typeof d.fundDetails==="object")?d.fundDetails:{},
     funds: Array.isArray(d.funds)&&d.funds.length?d.funds:FUNDS.slice(),
     customFunds: Array.isArray(d.customFunds)?d.customFunds:[],
@@ -1703,9 +1703,9 @@ function migrateReserves(){
       logic:"微小型军民两用涡喷发动机，全链路自主可控、无进口依赖；4款型号定型、千余架次飞行验证，对标捷克PBS-TJ；卡位靶机/巡飞弹/低空经济三大高景气赛道，国产替代刚性需求；核心团队源自金朋达（头部靶机企业），含航发体系专家（国务院津贴总工艺师等）。本轮惠山各主体合计≤2500万（洛社≤1500万、科创集团≤1000万），苏民嘉禾可借曦和等基金参与。据项目方材料估值约6.6亿。风险：与金朋达关联交易/业财独立性、股权代持（实控人阮波）、实控人或有债务约2.3亿，须将代持还原、规范核算、知识产权协议列为交割先决条件。",
       land:"计划本轮融资完成后于惠山区落地总部并建设微小型航空发动机制造基地（项目方可研：总投资3.5亿、用地60-80亩、年产1万台整机）。与惠山航空航天产业集群形成'动力+整机'协同，带动本地精密加工/特种材料/电子元器件配套集聚，契合惠山强链补链招商导向。"}
   ];
-  var has={}; state.reserves.forEach(function(r){ has[r.id]=true; });
+  var has={}; state.reserves.forEach(function(r){ has[r.id]=true; if(!Array.isArray(r.progs)) r.progs=[]; });
   var added=0;
-  seed.forEach(function(s){ if(!has[s.id]){ state.reserves.push(s); added++; } });
+  seed.forEach(function(s){ if(!has[s.id]){ s.progs=s.progs||[]; state.reserves.push(s); added++; } });
   if(added>0){ try{ save(); }catch(e){} }
   try{ localStorage.setItem("wb_migrate_reserves_v1","1"); }catch(e){}
 }
@@ -1832,6 +1832,28 @@ function reserveMoveDown(id){ var i=reserveIndex(id); if(i<0||i>=state.reserves.
 function reserveArchiveSuccess(id){ var r=state.reserves.filter(function(x){return x.id===id;})[0]; if(!r) return; r.status="投资成功"; r.archivedAt=todayStr(); save(); renderReserves(); toast("已归档到「投资成功」"); }
 function reserveArchiveAbandon(id){ var r=state.reserves.filter(function(x){return x.id===id;})[0]; if(!r) return; r.status="已放弃"; r.archivedAt=todayStr(); save(); renderReserves(); toast("已归档到「已放弃」"); }
 function reserveRestore(id){ var r=state.reserves.filter(function(x){return x.id===id;})[0]; if(!r) return; r.status="储备中"; delete r.archivedAt; save(); renderReserves(); toast("已恢复到储备中"); }
+/* ---------- 储备项目 跟进进展 ---------- */
+function toggleReserveProg(id){
+  var list=document.getElementById("rs_pg_list_"+id);
+  var arrow=document.getElementById("rs_pg_arrow_"+id);
+  if(list){ list.classList.toggle("hidden"); }
+  if(arrow){ arrow.style.transform=list&&list.classList.contains("hidden")?"":"rotate(180deg)"; }
+}
+function addReserveProgress(resId){
+  var r=state.reserves.filter(function(x){return x.id===resId;})[0]; if(!r) return;
+  if(!r.progs) r.progs=[];
+  var dateVal=document.getElementById("rs_pg_date_"+resId).value;
+  var textVal=document.getElementById("rs_pg_text_"+resId).value.trim();
+  if(!textVal){ toast("请填写跟进内容"); return; }
+  if(!dateVal) dateVal=todayStr();
+  r.progs.push({id:uid(), date:dateVal, content:textVal});
+  save(); renderReserves(); toast("已添加跟进记录");
+}
+function deleteReserveProgress(resId, progId){
+  var r=state.reserves.filter(function(x){return x.id===resId;})[0]; if(!r||!r.progs) return;
+  r.progs=r.progs.filter(function(p){return p.id!==progId;});
+  save(); renderReserves(); toast("已删除跟进记录");
+}
 
 /* ---------- pipeline actions ---------- */
 function markPipeDone(id){
@@ -2958,6 +2980,14 @@ function bindItemBtns(scope){
       else if(act==="down") reserveMoveDown(id);
     });
   });
+  Array.prototype.forEach.call(scope.querySelectorAll("[data-rsprog]"), function(b){
+    b.addEventListener("click", function(e){
+      e.stopPropagation();
+      var resId=b.getAttribute("data-rsid"); var act=b.getAttribute("data-rsprog");
+      if(act==="add") addReserveProgress(resId);
+      else if(act==="del") deleteReserveProgress(resId, b.getAttribute("data-pid"));
+    });
+  });
   Array.prototype.forEach.call(scope.querySelectorAll("[data-temp]"), function(b){
     b.addEventListener("click", function(){
       var id=b.getAttribute("data-id"); var act=b.getAttribute("data-temp");
@@ -3106,6 +3136,35 @@ function renderReserves(){
           '<button class="icon-btn del" data-del="reserve" data-id="'+r.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>删除</button>'+
         '</div>';
       }
+      var progs = (r.progs||[]);
+      var progHtml = '';
+      if(progs.length > 0 || true){
+        var sortedRProgs = progs.slice().sort(function(a,b){ return (a.date||"").localeCompare(b.date||""); });
+        progHtml = '<div class="lp-progress">'+
+          '<div class="lp-progress-head" onclick="toggleReserveProg(\''+r.id+'\')">'+
+            '<h4>跟进进展</h4>'+
+            '<span class="lp-prog-count">'+progs.length+' 条</span>'+
+            '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform .2s;" id="rs_pg_arrow_'+r.id+'"><path d="M6 9l3 3 3-3"/></svg>'+
+          '</div>';
+        if(progs.length > 0){
+          progHtml += '<div class="lp-progress-list" id="rs_pg_list_'+r.id+'">';
+          sortedRProgs.forEach(function(p){
+            progHtml += '<div class="lp-prog-item">'+
+              '<span class="lp-prog-date">'+esc(p.date)+'</span>'+
+              '<span class="lp-prog-text">'+esc(p.content)+'</span>'+
+              '<button class="lp-prog-del" data-rsprog="del" data-rsid="'+r.id+'" data-pid="'+p.id+'" title="删除此条">&times;</button>'+
+            '</div>';
+          });
+          progHtml += '</div>';
+        } else {
+          progHtml += '<div class="lp-progress-list hidden" id="rs_pg_list_'+r.id+'"></div>';
+        }
+        progHtml += '<div class="lp-prog-add-form" id="rs_pg_add_'+r.id+'">'+
+          '<input type="date" id="rs_pg_date_'+r.id+'" value="'+todayStr()+'">'+
+          '<input type="text" id="rs_pg_text_'+r.id+'" placeholder="记录本次跟进情况…">'+
+          '<button class="icon-btn ok" data-rsprog="add" data-rsid="'+r.id+'">＋ 添加</button>'+
+        '</div></div>';
+      }
       return '<div class="item'+(isArchived?' lp-archived':'')+'">'+
         '<div class="it-top"><div class="it-title">'+esc(r.name)+'</div>'+
           '<span class="tag" style="background:'+(RESERVE_COLOR[status]||"#9aa6b2")+';color:#fff;">'+status+'</span></div>'+
@@ -3119,7 +3178,7 @@ function renderReserves(){
         (r.logic?'<div class="it-sub"><b>投资逻辑&amp;亮点：</b>'+esc(r.logic)+'</div>':'')+
         (r.land?'<div class="it-sub"><b>落地内容：</b>'+esc(r.land)+'</div>':'')+
         ((r.inv||r.val)?'<div class="it-sub">'+(r.inv?'<b>拟投金额：</b>'+r.inv+' 万 ':'')+(r.val?'<b>初步估值：</b>'+r.val+' 万':'')+'</div>':'')+
-        archActions+'</div>';
+        progHtml+archActions+'</div>';
     }).join("");
     bindItemBtns(list);
   }
@@ -3202,7 +3261,7 @@ function addReserve(){
     prod:val("r_prod"), round:val("r_round"),
     inv:val("r_inv")?+val("r_inv"):0,
     val:val("r_val")?+val("r_val"):0,
-    logic:val("r_logic"), land:val("r_land"), status:"储备中", sample:false
+    logic:val("r_logic"), land:val("r_land"), status:"储备中", progs:[], sample:false
   });
   save();
   setVal("r_name",""); setVal("r_est",""); setVal("r_loc",""); setVal("r_ind","");
@@ -3261,7 +3320,7 @@ function importReserveCSV(text){
       if(n>30000 && n<60000){ var d=new Date((n-25569)*86400000); if(!isNaN(d)) est=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
     }
     function numCell(c){ var v=(c||"").trim().replace(/,/g,""); if(v==="" || v==="—" || v==="-") return 0; var n=parseFloat(v); return isNaN(n)?0:n; }
-    state.reserves.push({id:uid(), name:name, est:(est+"").trim(), loc:(idx.loc>=0?row[idx.loc]:"")||"", ind:(idx.ind>=0?row[idx.ind]:"")||"", prod:(idx.prod>=0?row[idx.prod]:"")||"", round:(idx.round>=0?row[idx.round]:"")||"", inv:numCell(idx.inv>=0?row[idx.inv]:""), val:numCell(idx.val>=0?row[idx.val]:""), logic:(idx.logic>=0?row[idx.logic]:"")||"", land:(idx.land>=0?row[idx.land]:"")||"", status:"储备中", sample:false});
+    state.reserves.push({id:uid(), name:name, est:(est+"").trim(), loc:(idx.loc>=0?row[idx.loc]:"")||"", ind:(idx.ind>=0?row[idx.ind]:"")||"", prod:(idx.prod>=0?row[idx.prod]:"")||"", round:(idx.round>=0?row[idx.round]:"")||"", inv:numCell(idx.inv>=0?row[idx.inv]:""), val:numCell(idx.val>=0?row[idx.val]:""), logic:(idx.logic>=0?row[idx.logic]:"")||"", land:(idx.land>=0?row[idx.land]:"")||"", status:"储备中", progs:[], sample:false});
     existing[name]=true; added++;
   }
   save(); renderAll();
