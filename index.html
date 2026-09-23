@@ -2461,7 +2461,7 @@ function fundDetailHTML(f){
           '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform .2s;" id="invpg_arrow_'+f+'_'+i+'"><path d="M6 9l3 3 3-3"/></svg>'+
         '</div>';
       if(invProgs.length > 0){
-        var sortedInvProgs = invProgs.slice().sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
+        var sortedInvProgs = invProgs.slice().sort(function(a,b){ return (a.date||"").localeCompare(b.date||""); });
         invProgHtml += '<div class="lp-progress-list" id="invpg_list_'+f+'_'+i+'">';
         sortedInvProgs.forEach(function(ip){
           var isTask = ip.src==="task";
