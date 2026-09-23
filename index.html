@@ -885,7 +885,14 @@ html[data-bp="mobile"] .pg-topic-lib, html[data-bp="small"] .pg-topic-lib{grid-t
 
       <div data-page-node-id="MRTHwtweNqtK3ded9zqoLY" class="card">
         <h3 data-page-node-id="oHm4gKVMHLmrtr1WlJdEUf"><svg data-page-node-id="g9soDAfoaMxLcwIznec8fm" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="WBEpJRB4T8nMKn96JAaXgc" d="M3 3v18h18"/><path data-page-node-id="RCCGS28X9pmsPZkT9PCeZl" d="M7 14l4-4 3 3 5-6"/></svg><!--pnid:WW9aq5BNZBDMwnF3rls4XI-->储备项目清单</h3>
+        <div class="seg" id="rsSeg">
+          <button class="seg-btn active" data-rsview="all">全部</button>
+          <button class="seg-btn" data-rsview="active">储备中(<span id="rsActiveCnt">0</span>)</button>
+          <button class="seg-btn" data-rsview="success">投资成功(<span id="rsSuccessCnt">0</span>)</button>
+          <button class="seg-btn" data-rsview="abandoned">已放弃(<span id="rsAbandonedCnt">0</span>)</button>
+        </div>
         <div class="filter-bar"><input id="rs_q" class="f-input" placeholder="搜索企业/行业/地区…"></div>
+        <div class="muted" style="font-size:12px;margin:6px 2px 0;">列表顺序可手动调整：用每条下方的「置顶 / 上移 / 下移」按钮排序；手动排过序后按自定义顺序显示（不再自动按名称排序）。</div>
         <div data-page-node-id="TvdyqCymhxJPVnDtZ5D8fX" class="list" id="reserveList"></div>
       </div>
     </section>
@@ -1052,8 +1059,10 @@ var PIPE_STATUS_COLOR = {"未开始":"#9aa6b2","进行中":"#2e6ea8","预警":"#
 var LP_COLOR = {"接触":"#9aa6b2","尽调":"#2e6ea8","签约":"#157a8a","打款":"#2e9e5b","退出":"#d64545","募集成功":"#2e9e5b","已放弃":"#999"};
 var LP_ACTIVE_STATUSES = ["接触","尽调","签约","打款","退出"];
 var lpView = "all"; // all | active | success | abandoned
+var RESERVE_COLOR = {"储备中":"#2e6ea8","投资成功":"#2e9e5b","已放弃":"#999"};
+var reserveView = "all"; // all | active | success | abandoned
 
-var state = { tasks:[], pipeline:[], meetings:[], lps:[], temps:[], reserves:[], funds:[], customFunds:[], fundOrder:[], fundDetails:{}, seeded:false, lpManualOrder:false, fundingFollow:[], fundingIgnore:[], party:{}, alerts:{} };
+var state = { tasks:[], pipeline:[], meetings:[], lps:[], temps:[], reserves:[], funds:[], customFunds:[], fundOrder:[], fundDetails:{}, seeded:false, lpManualOrder:false, reserveManualOrder:false, fundingFollow:[], fundingIgnore:[], party:{}, alerts:{} };
 /* 会议周报的周游标：仅存在于当前页面会话，不写入 state，故不落 localStorage / 云端，刷新必回本周 */
 var wrCursor = "";
 var currentFund = "全部";
@@ -1271,6 +1280,7 @@ function normalize(d){
     })(),
     seeded: !!d.seeded,
     lpManualOrder: !!d.lpManualOrder,
+    reserveManualOrder: !!d.reserveManualOrder,
     fundingFollow: Array.isArray(d.fundingFollow)?d.fundingFollow:[],
     fundingIgnore: Array.isArray(d.fundingIgnore)?d.fundingIgnore:[],
     party: (d.party && typeof d.party==="object")?d.party:{},
@@ -1686,10 +1696,10 @@ function migrateReserves(){
   try{ if(localStorage.getItem("wb_migrate_reserves_v1")) return; }catch(e){} // 已迁移过则不再自动补回（尊重用户手动删除）
   if(!state.reserves) state.reserves=[];
   var seed=[
-    {id:"res-linghu-2026", name:"领湖智能", est:"", loc:"肇庆（落地）", ind:"具身智能/机器人", prod:"具身机器人关节模组电机", round:"本轮（计划融资5000万）", inv:0, val:40000,
+    {id:"res-linghu-2026", name:"领湖智能", est:"", loc:"肇庆（落地）", ind:"具身智能/机器人", prod:"具身机器人关节模组电机", round:"本轮（计划融资5000万）", inv:0, val:40000, status:"储备中",
       logic:"具身机器人关节模组电机。去年营收7000万，今年预计1.6亿、净利润1400万，上半年已实现8000万；成长性突出。海愿资本领投3000万已交割；本轮计划融资5000万、估值4亿，尚余1500-2000万跟投额度。海愿资本刚完成尽调、将赴洛社；下一轮5000万（待今年财报，预计明年Q1交割）可落生产。",
       land:"落地肇庆。本轮跟投1500-2000万可落研发+销售中心+开票（暂落不了生产）；提前锁定下一轮地方政府产业投资、提前拿订单。下一轮5000万（明年Q1交割）可落生产。"},
-    {id:"res-yinghe-2026", name:"硬核永动（北京）航空航天科技有限责任公司", est:"2025-12-18", loc:"北京（总部）；计划惠山区落地总部+智造基地", ind:"航空航天/航空发动机", prod:"微小型军民两用涡喷发动机（YH40/YH80/YH125/YH150等）", round:"本轮（惠山各主体合计≤2500万）", inv:2500, val:66000,
+    {id:"res-yinghe-2026", name:"硬核永动（北京）航空航天科技有限责任公司", est:"2025-12-18", loc:"北京（总部）；计划惠山区落地总部+智造基地", ind:"航空航天/航空发动机", prod:"微小型军民两用涡喷发动机（YH40/YH80/YH125/YH150等）", round:"本轮（惠山各主体合计≤2500万）", inv:2500, val:66000, status:"储备中",
       logic:"微小型军民两用涡喷发动机，全链路自主可控、无进口依赖；4款型号定型、千余架次飞行验证，对标捷克PBS-TJ；卡位靶机/巡飞弹/低空经济三大高景气赛道，国产替代刚性需求；核心团队源自金朋达（头部靶机企业），含航发体系专家（国务院津贴总工艺师等）。本轮惠山各主体合计≤2500万（洛社≤1500万、科创集团≤1000万），苏民嘉禾可借曦和等基金参与。据项目方材料估值约6.6亿。风险：与金朋达关联交易/业财独立性、股权代持（实控人阮波）、实控人或有债务约2.3亿，须将代持还原、规范核算、知识产权协议列为交割先决条件。",
       land:"计划本轮融资完成后于惠山区落地总部并建设微小型航空发动机制造基地（项目方可研：总投资3.5亿、用地60-80亩、年产1万台整机）。与惠山航空航天产业集群形成'动力+整机'协同，带动本地精密加工/特种材料/电子元器件配套集聚，契合惠山强链补链招商导向。"}
   ];
@@ -1807,6 +1817,7 @@ function saveReserve(id){
   r.ind=document.getElementById("re_ind_"+id).value.trim();
   r.prod=document.getElementById("re_prod_"+id).value.trim();
   r.round=document.getElementById("re_round_"+id).value.trim();
+  r.status=document.getElementById("re_status_"+id).value;
   r.inv=+(document.getElementById("re_inv_"+id).value||0);
   r.val=+(document.getElementById("re_val_"+id).value||0);
   r.logic=document.getElementById("re_logic_"+id).value.trim();
@@ -1814,6 +1825,13 @@ function saveReserve(id){
   editReserveId=null; save(); renderAll(); toast("已保存");
 }
 function deleteReserve(id){ state.reserves=state.reserves.filter(function(x){return x.id!==id;}); if(editReserveId===id) editReserveId=null; save(); renderAll(); toast("已删除"); }
+function reserveIndex(id){ for(var k=0;k<state.reserves.length;k++){ if(state.reserves[k].id===id) return k; } return -1; }
+function reserveMoveTop(id){ var i=reserveIndex(id); if(i<0) return; var x=state.reserves.splice(i,1)[0]; state.reserves.unshift(x); state.reserveManualOrder=true; save(); renderAll(); toast("已置顶"); }
+function reserveMoveUp(id){ var i=reserveIndex(id); if(i<=0) return; var t=state.reserves[i-1]; state.reserves[i-1]=state.reserves[i]; state.reserves[i]=t; state.reserveManualOrder=true; save(); renderAll(); toast("已上移一位"); }
+function reserveMoveDown(id){ var i=reserveIndex(id); if(i<0||i>=state.reserves.length-1) return; var t=state.reserves[i+1]; state.reserves[i+1]=state.reserves[i]; state.reserves[i]=t; state.reserveManualOrder=true; save(); renderAll(); toast("已下移一位"); }
+function reserveArchiveSuccess(id){ var r=state.reserves.filter(function(x){return x.id===id;})[0]; if(!r) return; r.status="投资成功"; r.archivedAt=todayStr(); save(); renderReserves(); toast("已归档到「投资成功」"); }
+function reserveArchiveAbandon(id){ var r=state.reserves.filter(function(x){return x.id===id;})[0]; if(!r) return; r.status="已放弃"; r.archivedAt=todayStr(); save(); renderReserves(); toast("已归档到「已放弃」"); }
+function reserveRestore(id){ var r=state.reserves.filter(function(x){return x.id===id;})[0]; if(!r) return; r.status="储备中"; delete r.archivedAt; save(); renderReserves(); toast("已恢复到储备中"); }
 
 /* ---------- pipeline actions ---------- */
 function markPipeDone(id){
@@ -2932,6 +2950,12 @@ function bindItemBtns(scope){
       if(act==="edit") editReserve(id);
       else if(act==="save") saveReserve(id);
       else if(act==="cancel") cancelEditReserve();
+      else if(act==="archiveSuccess") reserveArchiveSuccess(id);
+      else if(act==="archiveAbandon") reserveArchiveAbandon(id);
+      else if(act==="restore") reserveRestore(id);
+      else if(act==="top") reserveMoveTop(id);
+      else if(act==="up") reserveMoveUp(id);
+      else if(act==="down") reserveMoveDown(id);
     });
   });
   Array.prototype.forEach.call(scope.querySelectorAll("[data-temp]"), function(b){
@@ -3021,7 +3045,12 @@ function reserveEditFormHTML(r){
         '<div class="field"><label>注册地</label><input id="re_loc_'+r.id+'" value="'+esc(r.loc||"")+'"></div></div>'+
       '<div class="row"><div class="field"><label>所属行业</label><input id="re_ind_'+r.id+'" value="'+esc(r.ind||"")+'"></div>'+
         '<div class="field" style="flex:2 1 240px;"><label>核心产品</label><input id="re_prod_'+r.id+'" value="'+esc(r.prod||"")+'"></div>'+
-        '<div class="field"><label>融资轮次</label><input id="re_round_'+r.id+'" value="'+esc(r.round||"")+'"></div></div>'+
+        '<div class="field"><label>融资轮次</label><input id="re_round_'+r.id+'" value="'+esc(r.round||"")+'"></div>'+
+        '<div class="field"><label>状态</label><select id="re_status_'+r.id+'">'+
+          '<option value="储备中"'+((r.status||"储备中")==="储备中"?" selected":"")+'>储备中</option>'+
+          '<option value="投资成功"'+((r.status||"储备中")==="投资成功"?" selected":"")+'>投资成功</option>'+
+          '<option value="已放弃"'+((r.status||"储备中")==="已放弃"?" selected":"")+'>已放弃</option>'+
+        '</select></div></div>'+
       '<div class="row"><div class="field"><label>拟投金额（万元）</label><input id="re_inv_'+r.id+'" type="number" inputmode="decimal" value="'+(r.inv||"")+'"></div>'+
         '<div class="field"><label>初步估值（万元）</label><input id="re_val_'+r.id+'" type="number" inputmode="decimal" value="'+(r.val||"")+'"></div></div>'+
       '<div class="row"><div class="field" style="flex:2 1 240px;"><label>投资逻辑&amp;投资亮点</label><input id="re_logic_'+r.id+'" value="'+esc(r.logic||"")+'"></div>'+
@@ -3035,15 +3064,51 @@ function reserveEditFormHTML(r){
 function renderReserves(){
   var list=document.getElementById("reserveList");
   var q=(rsQ||"").trim().toLowerCase();
-  var arr=state.reserves.filter(function(r){ if(!q) return true; var hay=(r.name+" "+(r.ind||"")+" "+(r.loc||"")+" "+(r.round||"")+" "+(r.prod||"")+" "+(r.logic||"")).toLowerCase(); return hay.indexOf(q)>=0; });
+  var allRs = state.reserves.filter(function(r){ if(!q) return true; var hay=(r.name+" "+(r.ind||"")+" "+(r.loc||"")+" "+(r.round||"")+" "+(r.prod||"")+" "+(r.logic||"")+" "+(r.status||"")).toLowerCase(); return hay.indexOf(q)>=0; });
+  // 按视图筛选
+  var arr = allRs.filter(function(r){
+    if(reserveView==="all") return true;
+    if(reserveView==="active") return r.status!=="投资成功" && r.status!=="已放弃";
+    if(reserveView==="success") return r.status==="投资成功";
+    if(reserveView==="abandoned") return r.status==="已放弃";
+    return true;
+  });
+  // 更新计数
+  var cntEl = function(id){ var e=document.getElementById(id); if(e) e.textContent=allRs.filter(function(r){ if(id==="rsActiveCnt") return r.status!=="投资成功" && r.status!=="已放弃"; if(id==="rsSuccessCnt") return r.status==="投资成功"; if(id==="rsAbandonedCnt") return r.status==="已放弃"; return false; }).length; };
+  cntEl("rsActiveCnt"); cntEl("rsSuccessCnt"); cntEl("rsAbandonedCnt");
+  // 更新 seg 按钮高亮
+  Array.prototype.forEach.call(document.querySelectorAll("#rsSeg .seg-btn"), function(b){ b.classList.toggle("active", b.getAttribute("data-rsview")===reserveView); });
   if(!state.reserves.length){ list.innerHTML='<div class="empty">还没有储备项目。</div>'; }
-  else if(!arr.length){ list.innerHTML='<div class="empty">没有符合搜索条件的储备项目。</div>'; bindItemBtns(list); }
+  else if(!arr.length){ list.innerHTML='<div class="empty">'+(reserveView==="all"?"没有符合搜索条件的储备项目。":"该分类下暂无储备项目。")+'</div>'; bindItemBtns(list); }
   else{
-    var sorted=arr.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
-    list.innerHTML = sorted.map(function(r){
+    if(!state.reserveManualOrder){
+      arr.sort(function(a,b){ return (a.name||"").localeCompare(b.name||""); });
+    }
+    list.innerHTML = arr.map(function(r, idx){
       if(editReserveId===r.id) return reserveEditFormHTML(r);
-      return '<div class="item">'+
-        '<div class="it-top"><div class="it-title">'+esc(r.name)+'</div></div>'+
+      var status = r.status||"储备中";
+      var isArchived = (status==="投资成功" || status==="已放弃");
+      var archActions = '';
+      if(isArchived){
+        archActions = '<div class="it-actions">'+
+          '<span class="wr-histag">'+(status==="投资成功"?"投资成功 · 归档时间："+(r.archivedAt?fmtMD(r.archivedAt):"—"):"已放弃 · 放弃时间："+(r.archivedAt?fmtMD(r.archivedAt):"—"))+'</span>'+
+          '<button class="icon-btn" data-reserve="restore" data-id="'+r.id+'">恢复到储备中</button>'+
+          '<button class="icon-btn del" data-del="reserve" data-id="'+r.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>删除</button>'+
+        '</div>';
+      } else {
+        archActions = '<div class="it-actions">'+
+          '<button class="icon-btn edit" data-reserve="edit" data-id="'+r.id+'">编辑</button>'+
+          '<button class="icon-btn ok" data-reserve="archiveSuccess" data-id="'+r.id+'" title="归档到投资成功">投资成功</button>'+
+          '<button class="icon-btn" data-reserve="archiveAbandon" data-id="'+r.id+'" title="归档到已放弃">已放弃</button>'+
+          '<button class="icon-btn" data-reserve="top" data-id="'+r.id+'" title="移到列表最前">置顶</button>'+
+          '<button class="icon-btn" data-reserve="up" data-id="'+r.id+'" title="上移一位">上移</button>'+
+          '<button class="icon-btn" data-reserve="down" data-id="'+r.id+'" title="下移一位">下移</button>'+
+          '<button class="icon-btn del" data-del="reserve" data-id="'+r.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>删除</button>'+
+        '</div>';
+      }
+      return '<div class="item'+(isArchived?' lp-archived':'')+'">'+
+        '<div class="it-top"><div class="it-title">'+esc(r.name)+'</div>'+
+          '<span class="tag" style="background:'+(RESERVE_COLOR[status]||"#9aa6b2")+';color:#fff;">'+status+'</span></div>'+
         '<div class="it-sub">'+
           (r.ind?'<span class="tag cat-qt">'+esc(r.ind)+'</span>':'')+
           (r.loc?'<span>'+esc(r.loc)+'</span>':'')+
@@ -3054,10 +3119,7 @@ function renderReserves(){
         (r.logic?'<div class="it-sub"><b>投资逻辑&amp;亮点：</b>'+esc(r.logic)+'</div>':'')+
         (r.land?'<div class="it-sub"><b>落地内容：</b>'+esc(r.land)+'</div>':'')+
         ((r.inv||r.val)?'<div class="it-sub">'+(r.inv?'<b>拟投金额：</b>'+r.inv+' 万 ':'')+(r.val?'<b>初步估值：</b>'+r.val+' 万':'')+'</div>':'')+
-        '<div class="it-actions">'+
-          '<button class="icon-btn edit" data-reserve="edit" data-id="'+r.id+'">编辑</button>'+
-          '<button class="icon-btn del" data-del="reserve" data-id="'+r.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>删除</button>'+
-        '</div></div>';
+        archActions+'</div>';
     }).join("");
     bindItemBtns(list);
   }
@@ -3140,7 +3202,7 @@ function addReserve(){
     prod:val("r_prod"), round:val("r_round"),
     inv:val("r_inv")?+val("r_inv"):0,
     val:val("r_val")?+val("r_val"):0,
-    logic:val("r_logic"), land:val("r_land"), sample:false
+    logic:val("r_logic"), land:val("r_land"), status:"储备中", sample:false
   });
   save();
   setVal("r_name",""); setVal("r_est",""); setVal("r_loc",""); setVal("r_ind","");
@@ -3199,7 +3261,7 @@ function importReserveCSV(text){
       if(n>30000 && n<60000){ var d=new Date((n-25569)*86400000); if(!isNaN(d)) est=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
     }
     function numCell(c){ var v=(c||"").trim().replace(/,/g,""); if(v==="" || v==="—" || v==="-") return 0; var n=parseFloat(v); return isNaN(n)?0:n; }
-    state.reserves.push({id:uid(), name:name, est:(est+"").trim(), loc:(idx.loc>=0?row[idx.loc]:"")||"", ind:(idx.ind>=0?row[idx.ind]:"")||"", prod:(idx.prod>=0?row[idx.prod]:"")||"", round:(idx.round>=0?row[idx.round]:"")||"", inv:numCell(idx.inv>=0?row[idx.inv]:""), val:numCell(idx.val>=0?row[idx.val]:""), logic:(idx.logic>=0?row[idx.logic]:"")||"", land:(idx.land>=0?row[idx.land]:"")||"", sample:false});
+    state.reserves.push({id:uid(), name:name, est:(est+"").trim(), loc:(idx.loc>=0?row[idx.loc]:"")||"", ind:(idx.ind>=0?row[idx.ind]:"")||"", prod:(idx.prod>=0?row[idx.prod]:"")||"", round:(idx.round>=0?row[idx.round]:"")||"", inv:numCell(idx.inv>=0?row[idx.inv]:""), val:numCell(idx.val>=0?row[idx.val]:""), logic:(idx.logic>=0?row[idx.logic]:"")||"", land:(idx.land>=0?row[idx.land]:"")||"", status:"储备中", sample:false});
     existing[name]=true; added++;
   }
   save(); renderAll();
@@ -5768,6 +5830,13 @@ window.onerror = function(msg, url, line, col, err){
       lpSegEl.addEventListener("click", function(e){
         var b=e.target; while(b && b!==lpSegEl && !b.getAttribute("data-lpview")){ b=b.parentNode; }
         if(b && b.getAttribute("data-lpview")){ lpView=b.getAttribute("data-lpview"); renderLps(); }
+      });
+    }
+    var rsSegEl=document.getElementById("rsSeg");
+    if(rsSegEl){
+      rsSegEl.addEventListener("click", function(e){
+        var b=e.target; while(b && b!==rsSegEl && !b.getAttribute("data-rsview")){ b=b.parentNode; }
+        if(b && b.getAttribute("data-rsview")){ reserveView=b.getAttribute("data-rsview"); renderReserves(); }
       });
     }
     setVal("t_due", todayStr());
