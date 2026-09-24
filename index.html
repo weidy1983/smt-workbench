@@ -2686,9 +2686,11 @@ function renderWeeklyReport(){
   html+='<div class="wr-sec"><div class="wr-h">一、本周已完成（'+(doneTasks.length+donePipe.length+meets.length)+'）</div>';
   if(!doneTasks.length && !donePipe.length && !meets.length) html+='<div class="muted" style="font-size:12.5px;">暂无已完成记录</div>';
   else{
-    doneTasks.forEach(function(t){ html+='<div class="wr-item">· [任务] '+esc(t.title)+'（'+(t.cat||"")+'/'+(t.pri||"")+(t.fund?(' · '+esc(t.fund)):'')+'）<span class="wr-done-at">'+fmtMD(t.doneAt)+'（'+fmtWeek(t.doneAt)+'）</span></div>'; });
-    donePipe.forEach(function(p){ html+='<div class="wr-item">· [管线] '+esc(p.fund)+'·'+p.stage+'：'+esc(p.title)+'<span class="wr-done-at">'+fmtMD(p.doneAt)+'（'+fmtWeek(p.doneAt)+'）</span></div>'; });
-    meets.forEach(function(m){ html+='<div class="wr-item">· [会议] '+esc(m.title)+'<span class="wr-done-at">'+fmtMD(m.date)+'（'+fmtWeek(m.date)+'）</span></div>'; });
+    mergeDoneSorted(doneTasks,donePipe,meets).forEach(function(it){
+      if(it.kind==="task"){ var t=it.o; html+='<div class="wr-item">· [任务] '+esc(t.title)+'（'+(t.cat||"")+'/'+(t.pri||"")+(t.fund?(' · '+esc(t.fund)):'')+'）<span class="wr-done-at">'+fmtMD(t.doneAt)+'（'+fmtWeek(t.doneAt)+'）</span></div>'; }
+      else if(it.kind==="pipe"){ var p=it.o; html+='<div class="wr-item">· [管线] '+esc(p.fund)+'·'+p.stage+'：'+esc(p.title)+'<span class="wr-done-at">'+fmtMD(p.doneAt)+'（'+fmtWeek(p.doneAt)+'）</span></div>'; }
+      else { var m=it.o; html+='<div class="wr-item">· [会议] '+esc(m.title)+'<span class="wr-done-at">'+fmtMD(m.date)+'（'+fmtWeek(m.date)+'）</span></div>'; }
+    });
   }
   html+='</div>';
   html+='<div class="wr-sec"><div class="wr-h">二、未完成事项（'+(openTasks.length+openPipe.length)+'）</div>';
@@ -2727,14 +2729,23 @@ function weekOffsetLabel(refStr){
   if(w>0) return w+"周后";
   return (-w)+"周前";
 }
+function mergeDoneSorted(doneTasks,donePipe,meets){
+  var all=[];
+  doneTasks.forEach(function(t){ all.push({kind:"task", d:t.doneAt||"", o:t}); });
+  donePipe.forEach(function(p){ all.push({kind:"pipe", d:p.doneAt||"", o:p}); });
+  meets.forEach(function(m){ all.push({kind:"meet", d:m.date||"", o:m}); });
+  return all.sort(function(a,b){ return (a.d||"").localeCompare(b.d||""); });
+}
 function copyWeekly(wr, data){
   var L=[];
   L.push("工作周报（"+wr.startStr+" ~ "+wr.endStr+"）"); L.push("");
   L.push("一、本周已完成");
   if(!data.doneTasks.length&&!data.donePipe.length&&!data.meets.length) L.push("（无）");
-  data.doneTasks.forEach(function(t){ L.push("1. [任务] "+t.title+"（"+(t.cat||"")+"/"+(t.pri||"")+(t.fund?(" · "+t.fund):"")+"）✓ "+fmtMD(t.doneAt)+fmtWeek(t.doneAt)); });
-  data.donePipe.forEach(function(p){ L.push("1. [管线] "+p.fund+"·"+p.stage+"："+p.title+"✓ "+fmtMD(p.doneAt)+fmtWeek(p.doneAt)); });
-  data.meets.forEach(function(m){ L.push("1. [会议] "+m.title+"（"+fmtMD(m.date)+fmtWeek(m.date)+"）"+(m.concl?(" 结论："+m.concl):"")); });
+  mergeDoneSorted(data.doneTasks,data.donePipe,data.meets).forEach(function(it){
+    if(it.kind==="task"){ var t=it.o; L.push("1. [任务] "+t.title+"（"+(t.cat||"")+"/"+(t.pri||"")+(t.fund?(" · "+t.fund):"")+"）✓ "+fmtMD(t.doneAt)+fmtWeek(t.doneAt)); }
+    else if(it.kind==="pipe"){ var p=it.o; L.push("1. [管线] "+p.fund+"·"+p.stage+"："+p.title+"✓ "+fmtMD(p.doneAt)+fmtWeek(p.doneAt)); }
+    else { var m=it.o; L.push("1. [会议] "+m.title+"（"+fmtMD(m.date)+fmtWeek(m.date)+"）"+(m.concl?(" 结论："+m.concl):"")); }
+  });
   L.push(""); L.push("二、未完成事项");
   if(!data.openTasks.length&&!data.openPipe.length) L.push("（无）");
   data.openTasks.forEach(function(t){ L.push("1. [任务] "+t.title+"（"+(t.due?("截止"+t.due):"无期限")+(t.fund?(" · "+t.fund):"")+"）"); });
