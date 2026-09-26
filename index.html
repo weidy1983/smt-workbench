@@ -1751,6 +1751,21 @@ function migrateReserves4(){
   if(added>0){ try{ save(); }catch(e){} }
   try{ localStorage.setItem("wb_migrate_reserves_v4","1"); }catch(e){}
 }
+function migrateReserves5(){
+  try{ if(localStorage.getItem("wb_migrate_reserves_v5")) return; }catch(e){} // 已迁移过则不再自动补回（尊重用户手动删除）
+  if(!state.reserves) state.reserves=[];
+  var seed=[
+    {id:"res-beidoutianxin-2026", name:"深圳北斗天芯科技有限公司", est:"2021年", loc:"深圳", ind:"卫星导航/国防科技安全/安防/工业物联网/自动驾驶", prod:"民用超小型化卫星PNT抗干扰终端及核心部件、抗干扰解决方案（全自研、全国产、高集成、高可靠）", round:"新一轮（上轮投后估值1.57亿元，本轮估值3亿元可谈，融资5000万元）", inv:0, val:30000, status:"储备中",
+      logic:"全球领先民用超小型化卫星PNT抗干扰终端提供商，聚焦复杂电磁环境下卫星信号可靠接收，为无人机、eVTOL、无人艇等无人系统及边境安防、能源、交通等关键行业提供不可或缺的导航安全核心部件与解决方案。①技术对标国际巨头——抗干扰指标超以色列Infinidome，全自研全国产、高集成高可靠；②团队源自北斗国家队——核心成员为2016年度国家科技进步特等奖（北斗二号）团队核心、原国防科大国家导航中心专家，与中山大学·深圳、国防科大等建立产学研体系；③业绩爆发式增长——2026上半年营收4100万元已超2025全年3500万元，无银行贷款、轻资产；④卡位卫星导航天基安全与国产替代黄金赛道，政策与市场双驱动。可迁总部及落地生产，计划2027年上市或并购退出。",
+      land:"可迁总部及落地生产（落地地待定，可谈）",
+      progs:[]}
+  ];
+  var has={}; state.reserves.forEach(function(r){ has[r.id]=true; if(!Array.isArray(r.progs)) r.progs=[]; });
+  var added=0;
+  seed.forEach(function(s){ if(!has[s.id]){ s.progs=s.progs||[]; state.reserves.push(s); added++; } });
+  if(added>0){ try{ save(); }catch(e){} }
+  try{ localStorage.setItem("wb_migrate_reserves_v5","1"); }catch(e){}
+}
 function deleteTask(id){ state.tasks=state.tasks.filter(function(x){return x.id!==id;}); if(editTaskId===id) editTaskId=null; save(); renderAll(); toast("已删除"); }
 function editTask(id){ editTaskId=id; editTempId=null; editLpId=null; editReserveId=null; renderAll(); }
 function cancelEditTask(){ editTaskId=null; renderAll(); }
@@ -5945,12 +5960,12 @@ window.onerror = function(msg, url, line, col, err){
     if(SB_ENABLED()){
       setSync("同步中…");
       ghPull().then(function(ok){
-        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
-        else { migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
+        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
+        else { migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
       });
       ghStartPolling(); // 启动 15 秒轮询，跨设备准实时同步
     } else {
-      migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); renderAll();
+      migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); renderAll();
       setSync("本地模式 · 点此开启云端同步", false);
     }
     // 募资资讯：先用内置快照秒开，随后静默拉取云端最新版本（与党建主题库一致）；云端版本不低于内置则采用云端
