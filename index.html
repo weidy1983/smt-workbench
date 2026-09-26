@@ -1721,6 +1721,21 @@ function migrateReserves2(){
   if(added>0){ try{ save(); }catch(e){} }
   try{ localStorage.setItem("wb_migrate_reserves_v2","1"); }catch(e){}
 }
+function migrateReserves3(){
+  try{ if(localStorage.getItem("wb_migrate_reserves_v3")) return; }catch(e){} // 已迁移过则不再自动补回（尊重用户手动删除）
+  if(!state.reserves) state.reserves=[];
+  var seed=[
+    {id:"res-huishi-2026", name:"慧石（上海）测控科技有限公司", est:"2011-10-12", loc:"上海青浦区（总部）；慧石科创园产业化基地", ind:"航空航天/高端装备—高端传感器", prod:"力热电光声磁系列高端传感器（MEMS高温高精度压力/加速度/温湿度/磁电传感器、航空机载传感器、车规传感器、机器人六维力传感器）；具自主知识产权MEMS硅应变芯片", round:"多轮融资已完成（2017中航国际、2019上海军民融合基金、2021中国航发基金、2024临芯投资、2025临芯/扬州光电）；本轮轮次与额度待补充", inv:0, val:0, status:"储备中",
+      logic:"国内唯一以航空机载传感器为核心主业的传感器专业化企业，专注「国内急需、国外禁运、国内还做不好」的高端传感器国产化替代。技术自主可控：MEMS硅应变片耐高温高精度芯片具完全自主知识产权（专利ZL2014 1 0111931.9），与Kulite/Endevco/VM/GE等国际同类技术等同、世界领先，100%自主保障。卡位高景气赛道：航空（中国航发/航空工业/商飞）、航天、船舶、兵器、核能，并延伸至汽车（戴姆勒一级供应商）、低空经济（eVTOL/无人机）、机器人（六维力）。12年承担100余航空航天型号、500余型产品配套。资质壁垒高：GJB9001/二级保密/武器装备科研生产许可证/AS9100D/IATF16949/戴姆勒OSA，2025国家级专精特新「小巨人」。股东含中航国际、上海军民融合基金、中国航发集团基金等国资（国资持股>20%），市场化混合所有制。风险：本轮融资轮次与估值/额度未披露；材料未提供营收利润等财务数据；军工订单波动与单一大客户依赖、民品（汽车/机器人）拓展进度待验证。",
+      land:"计划落户洛社（惠山高新区），与惠山航空航天产业集群（「动力+整机」协同）契合；现有产业化基地为上海青浦「慧石科创园」（航空航天及高端装备传感器产业化基地）。具体落地条款（用地/投资/返投）待补充对接。",
+      progs:[{id:"pg-huishi-1", date:"2026-09-26", content:"项目计划落户洛社（惠山高新区），肖主任、翟恩强已赴企业考察。"}]}
+  ];
+  var has={}; state.reserves.forEach(function(r){ has[r.id]=true; if(!Array.isArray(r.progs)) r.progs=[]; });
+  var added=0;
+  seed.forEach(function(s){ if(!has[s.id]){ s.progs=s.progs||[]; state.reserves.push(s); added++; } });
+  if(added>0){ try{ save(); }catch(e){} }
+  try{ localStorage.setItem("wb_migrate_reserves_v3","1"); }catch(e){}
+}
 function deleteTask(id){ state.tasks=state.tasks.filter(function(x){return x.id!==id;}); if(editTaskId===id) editTaskId=null; save(); renderAll(); toast("已删除"); }
 function editTask(id){ editTaskId=id; editTempId=null; editLpId=null; editReserveId=null; renderAll(); }
 function cancelEditTask(){ editTaskId=null; renderAll(); }
@@ -5915,12 +5930,12 @@ window.onerror = function(msg, url, line, col, err){
     if(SB_ENABLED()){
       setSync("同步中…");
       ghPull().then(function(ok){
-        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
-        else { migrateReserves(); migrateReserves2(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
+        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); migrateReserves3(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
+        else { migrateReserves(); migrateReserves2(); migrateReserves3(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
       });
       ghStartPolling(); // 启动 15 秒轮询，跨设备准实时同步
     } else {
-      migrateReserves(); migrateReserves2(); renderAll();
+      migrateReserves(); migrateReserves2(); migrateReserves3(); renderAll();
       setSync("本地模式 · 点此开启云端同步", false);
     }
     // 募资资讯：先用内置快照秒开，随后静默拉取云端最新版本（与党建主题库一致）；云端版本不低于内置则采用云端
