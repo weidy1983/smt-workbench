@@ -1736,6 +1736,21 @@ function migrateReserves3(){
   if(added>0){ try{ save(); }catch(e){} }
   try{ localStorage.setItem("wb_migrate_reserves_v3","1"); }catch(e){}
 }
+function migrateReserves4(){
+  try{ if(localStorage.getItem("wb_migrate_reserves_v4")) return; }catch(e){} // 已迁移过则不再自动补回（尊重用户手动删除）
+  if(!state.reserves) state.reserves=[];
+  var seed=[
+    {id:"res-yunqiang-2026", name:"云强智能（浙江云强智能装备有限公司）", est:"2020", loc:"浙江省玉环市（总部）；上海研发飞地", ind:"工业机器人/智能制造装备", prod:"工业机器人本体（六轴YQB-607/607L、SCARA、七轴摆盘一体机）、标准工作站（焊接/3D视觉/数控车一拖多）、整线解决方案；工业轮式人形机器人（布局中）", round:"A轮（融资规模1亿元，出让≤10%，玉环本地国有资本领投）", inv:0, val:100000, status:"储备中",
+      logic:"依托玉环、背靠玉强集团，是玉环及台州地区稀缺的具自主品牌机器人本体+系统集成能力本土企业。亮点：①区域先发——玉环及台州汽摩配/阀门产业集群自动化改造需求保守>100亿、区域无头部服务商，先发窗口明确；②高成长——营收2023年1308万→2025年2632万（CAGR 41.85%），2026年1-5月首次盈利36.2万+，在手订单1800万（+30%），2026E营收5000万；③模式创新——设备销售+RaaS租赁+共享智造+效果对赌「四轮驱动」，向经常性收入转型；④技术——自主六轴机器人、3D视觉、云平台，前瞻布局工业轮式人形机器人；⑤政策协同——玉环国资领投、企业地方双赢，上市路径清晰（2028国家级小巨人，2030前科创板/北交所）。风险：仍处早期（2025净利-204万、规模偏小），区域低价竞争与头部下沉、玉环高端人才不足、创新模式投入回收期长、RaaS坏账；投前估值偏高（PS 20x约10亿）。建议将股权结构、实控人、注册资本及本轮具体国资出资主体列为交割先决条件核查。",
+      land:"公司注册于浙江省玉环市，本项目（基金投资）计划落地玉环。本轮由玉环本地国有资本领投1亿元（出让≤10%、投前估值10亿元），契合玉环制造业数字化转型与智造产业升级招商导向；苏民嘉禾可结合曦和/清澜等基金参与，带动本地机器人本体及系统集成产业链集聚。",
+      progs:[]}
+  ];
+  var has={}; state.reserves.forEach(function(r){ has[r.id]=true; if(!Array.isArray(r.progs)) r.progs=[]; });
+  var added=0;
+  seed.forEach(function(s){ if(!has[s.id]){ s.progs=s.progs||[]; state.reserves.push(s); added++; } });
+  if(added>0){ try{ save(); }catch(e){} }
+  try{ localStorage.setItem("wb_migrate_reserves_v4","1"); }catch(e){}
+}
 function deleteTask(id){ state.tasks=state.tasks.filter(function(x){return x.id!==id;}); if(editTaskId===id) editTaskId=null; save(); renderAll(); toast("已删除"); }
 function editTask(id){ editTaskId=id; editTempId=null; editLpId=null; editReserveId=null; renderAll(); }
 function cancelEditTask(){ editTaskId=null; renderAll(); }
@@ -5930,12 +5945,12 @@ window.onerror = function(msg, url, line, col, err){
     if(SB_ENABLED()){
       setSync("同步中…");
       ghPull().then(function(ok){
-        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); migrateReserves3(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
-        else { migrateReserves(); migrateReserves2(); migrateReserves3(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
+        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
+        else { migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
       });
       ghStartPolling(); // 启动 15 秒轮询，跨设备准实时同步
     } else {
-      migrateReserves(); migrateReserves2(); migrateReserves3(); renderAll();
+      migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); renderAll();
       setSync("本地模式 · 点此开启云端同步", false);
     }
     // 募资资讯：先用内置快照秒开，随后静默拉取云端最新版本（与党建主题库一致）；云端版本不低于内置则采用云端
