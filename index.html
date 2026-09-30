@@ -1766,6 +1766,25 @@ function migrateReserves5(){
   if(added>0){ try{ save(); }catch(e){} }
   try{ localStorage.setItem("wb_migrate_reserves_v5","1"); }catch(e){}
 }
+function migrateReserves6(){
+  try{ if(localStorage.getItem("wb_migrate_reserves_v6")) return; }catch(e){} // 已迁移过则不再自动补回（尊重用户手动删除）
+  if(!state.reserves) state.reserves=[];
+  var seed=[
+    {id:"res-hongce-2026", name:"深圳市弘测精密科技有限公司", est:"2021-03-09", loc:"深圳（光明区）；无锡宜扬/惠山高新区（项目落地）", ind:"半导体测试（探针卡/存储测试/半导体测试设备）", prod:"探针卡（悬臂式/垂直式/MEMS）、存储芯片测试（DDR5、CP/FT）、半导体测试及探卡室设备、自动化及测试解决方案", round:"本轮增资融资3000万元（投前估值3亿元、投后3.3亿元，投资方持股约9.09%）", inv:3000, val:30000, status:"储备中",
+      logic:"半导体测试领域具备技术及产业化基础，垂直式探针卡已批量交付、MEMS探针卡进入客户导入，已进入通富微电、伟测科技等封测龙头供应体系，2023—2025营收145→662→2797万元持续高增。拟以无锡宜扬为主体落地惠山高新区，重点发展非DDIC探针卡、DRAM测试方案、CP自动化，规划设备+无尘车间+研发约6700万元。本轮增资3000万元、投前估值3亿元。风险：尚未盈利（2025净亏504万、2026H1净亏445万）；收入较多来自存储晶圆及芯片业务、受存储周期波动影响大；探针卡收入占比仍低、规模化待验证；部分关键探针依赖日韩供应商、PCB外协；扩产需客户验证与产能爬坡。建议将无锡宜扬主体、本轮出资先决与业绩对赌列为交割核查。",
+      land:"以无锡宜扬为主体落地惠山高新区（先进制造产业园），重点发展非DDIC探针卡及探卡室、DRAM测试解决方案、CP自动化；拟投入探针卡及存储测试设备、无尘车间和研发约6700万元。苏民曦和叁号拟投3000万元（本轮增资，投前估值3亿元）。",
+      progs:[]},
+    {id:"res-yejia-2026", name:"广东烨嘉光电科技股份有限公司", est:"2009年", loc:"广东东莞（总部，塘厦镇）；浙江玉环（新基地返投落地）", ind:"精密光学器件/智能汽车光学/消费电子光学/硅胶结构件", prod:"智能汽车光学器件（ADB/HD车灯透镜、HUD自由曲面镜、车载摄像头、激光雷达光学件）、消费电子光学（TV背光透镜、手机闪光透镜、AR镜片）、精密硅胶结构件", round:"本轮融资（苏民曦和贰号+叁号拟投≤1亿元，投前估值17.9亿元，2028年3月申报北交所）", inv:10000, val:179000, status:"储备中",
+      logic:"精密光学器件与硅胶结构件龙头，具备光学设计—模具—注塑—硅胶全链条能力，国内少数同时掌握精密塑胶与硅胶光学量产技术；已进入全球前十大车灯厂供应链，法雷奥最高级战略供应商，三星TV透镜全球唯二一级供应商。受益汽车智能化，ADB/HD车灯透镜、HUD自由曲面镜、激光雷达光学件量产/定点，2028全球需求放量在即；上市路径明确（本轮交割后申报新三板、2028年3月转板北交所）。本轮苏民曦和贰号+叁号拟投≤1亿元、投前估值17.9亿元。风险：股权冻结与治理、毛利率波动、原材料进口依赖、技术迭代、上市路径不确定性；需以玉环新基地返投1.5亿元（总部落户3年固定资产及研发费用2倍+开票10%）为交割先决。",
+      land:"玉环新基地落地（50亩），总部落户玉环后3个自然年度内完成不低于投资额1.5倍的返投（即1.5亿元），返投=固定资产及研发费用总额2倍+3年开票金额10%；重点解决产能缺口与产品结构升级（DLP投影灯、HUD自由曲面镜片、激光雷达光学器件）。苏民曦和贰号拟投4000万元、曦和叁号拟投6000万元，合计≤1亿元，投前估值17.9亿元。",
+      progs:[]}
+  ];
+  var has={}; state.reserves.forEach(function(r){ has[r.id]=true; if(!Array.isArray(r.progs)) r.progs=[]; });
+  var added=0;
+  seed.forEach(function(s){ if(!has[s.id]){ s.progs=s.progs||[]; state.reserves.push(s); added++; } });
+  if(added>0){ try{ save(); }catch(e){} }
+  try{ localStorage.setItem("wb_migrate_reserves_v6","1"); }catch(e){}
+}
 function deleteTask(id){ state.tasks=state.tasks.filter(function(x){return x.id!==id;}); if(editTaskId===id) editTaskId=null; save(); renderAll(); toast("已删除"); }
 function editTask(id){ editTaskId=id; editTempId=null; editLpId=null; editReserveId=null; renderAll(); }
 function cancelEditTask(){ editTaskId=null; renderAll(); }
@@ -6026,12 +6045,12 @@ window.onerror = function(msg, url, line, col, err){
     if(SB_ENABLED()){
       setSync("同步中…");
       ghPull().then(function(ok){
-        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
-        else { migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
+        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
+        else { migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
       });
       ghStartPolling(); // 启动 15 秒轮询，跨设备准实时同步
     } else {
-      migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); renderAll();
+      migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); renderAll();
       setSync("本地模式 · 点此开启云端同步", false);
     }
     // 募资资讯：先用内置快照秒开，随后静默拉取云端最新版本（与党建主题库一致）；云端版本不低于内置则采用云端
