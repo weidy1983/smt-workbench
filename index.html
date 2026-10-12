@@ -1828,6 +1828,21 @@ function migrateReserves7(){
   if(added>0){ try{ save(); }catch(e){} }
   try{ localStorage.setItem("wb_migrate_reserves_v7","1"); }catch(e){}
 }
+function migrateReserves8(){
+  try{ if(localStorage.getItem("wb_migrate_reserves_v8")) return; }catch(e){} // 已迁移过则不再自动补回（尊重用户手动删除）
+  if(!state.reserves) state.reserves=[];
+  var seed=[
+    {id:"res-yuemu-2026", name:"深圳市悦目光学器件有限公司", est:"1998年", loc:"深圳（华南地区光学制造标杆）；拟落地需5-6万㎡产业载体（待定）", ind:"高端光学玻璃器件制造/消费电子光学/车载光学/智能穿戴光学/工控光学", prod:"微晶盖板玻璃（华为Mate/P旗舰机型防护）、车载屏玻璃（智能座舱高透光耐候）、智能穿戴玻璃（蓝宝石/铝硅级，华为Watch/非凡大师/OPPO）、多元光学组件（摄像头保护镜片、心率监测窗口，供货三星/OPPO）；5万㎡基地、2200+高端设备、528+研发品控团队全链条智造", round:"新一轮股权融资2.0-2.5亿元（释放15%-20%股权，投资期5+2年；按此推算投后估值约10-16.7亿、投前约8-14亿，待补充精确值）；配套1.0亿固贷授信；资金用途产能扩建与研发升级", inv:"", val:"", status:"储备中",
+      logic:"国内高端光学玻璃器件制造近30年积淀，国家级专精特新“小巨人”及省级制造业单项冠军双料殊荣，华南光学制造标杆。核心产品微晶盖板玻璃稳定量产供货华为Mate/P旗舰，车载屏玻璃与智能穿戴玻璃（蓝宝石级）供货华为Watch/非凡大师/OPPO，多元光学组件供货三星/OPPO；与华为、大疆联合研发前置锁定订单，客户壁垒深。5万㎡基地、2200+高端设备、528+研发品控团队，全链条智造。财务稳健：2025营收5.93亿、利润1700万，2026预计营收6亿、利润约3000万（用户补充），CAGR 15.6%；2026E-2028E营收6/9/15亿。本轮股权融资2-2.5亿用于产能扩建与研发升级。风险：客户集中度高（华为系占比大）、消费电子周期波动；利润偏薄（2025利润率约2.9%）；本轮释放15%-20%股权对应估值区间宽（投后约10-16.7亿）、定价须审慎；落地需5-6万㎡载体及用工配套、重资产与返投考核重；关联交易/出口管制等需尽调确认。",
+      land:"落地保障诉求：需5-6万㎡产业载体（含1000人宿舍及生活配套）、用工协调支持；配套1.0亿固贷授信（母公司直投或合资+地方产业扶持）。拟落地地待定，可结合苏民/曦和/清澜政府资源（惠山/玉环等）对接，落地与政府出资及返投挂钩。",
+      progs:[]}
+  ];
+  var has={}; state.reserves.forEach(function(r){ has[r.id]=true; if(!Array.isArray(r.progs)) r.progs=[]; });
+  var added=0;
+  seed.forEach(function(s){ if(!has[s.id]){ s.progs=s.progs||[]; state.reserves.push(s); added++; } });
+  if(added>0){ try{ save(); }catch(e){} }
+  try{ localStorage.setItem("wb_migrate_reserves_v8","1"); }catch(e){}
+}
 function deleteTask(id){ state.tasks=state.tasks.filter(function(x){return x.id!==id;}); if(editTaskId===id) editTaskId=null; save(); renderAll(); toast("已删除"); }
 function editTask(id){ editTaskId=id; editTempId=null; editLpId=null; editReserveId=null; renderAll(); }
 function cancelEditTask(){ editTaskId=null; renderAll(); }
@@ -4225,12 +4240,12 @@ window.onerror = function(msg, url, line, col, err){
     if(SB_ENABLED()){
       setSync("同步中…");
       ghPull().then(function(ok){
-        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
-        else { migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
+        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); migrateReserves8(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
+        else { migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); migrateReserves8(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
       });
       ghStartPolling(); // 启动 15 秒轮询，跨设备准实时同步
     } else {
-      migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); renderAll();
+      migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); migrateReserves8(); renderAll();
       setSync("本地模式 · 点此开启云端同步", false);
     }
     // 募资资讯：先用内置快照秒开，随后静默拉取云端最新版本（与党建主题库一致）；云端版本不低于内置则采用云端
