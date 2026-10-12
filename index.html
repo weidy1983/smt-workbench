@@ -1163,7 +1163,22 @@ async function ghPull(){
     var d = rows[0].data;
     cloudUpdatedAt = rows[0].updated_at;
     if(d && typeof d==="object"){
-      state = normalize(d);
+      var incoming = normalize(d);
+      // 2026-10-12 修复：云端整覆盖会丢失本地增量（如储备项目跟进进展 progs）。
+      // 合并保护：仅当云端该储备缺失 progs 而本地（当前内存）尚有，则保留本地 progs 与手动排序，避免误删。
+      try{
+        if(state && Array.isArray(state.reserves) && Array.isArray(incoming.reserves)){
+          var _lm={}; state.reserves.forEach(function(r){ if(r&&r.id) _lm[r.id]=r; });
+          incoming.reserves.forEach(function(r){
+            if(r&&r.id&&_lm[r.id]){
+              var _lr=_lm[r.id];
+              if((!r.progs||!r.progs.length)&&_lr.progs&&_lr.progs.length) r.progs=_lr.progs;
+              if(_lr.reserveManualOrder!==undefined) r.reserveManualOrder=_lr.reserveManualOrder;
+            }
+          });
+        }
+      }catch(e){}
+      state = incoming;
       save();
       return true;
     }
@@ -1220,13 +1235,26 @@ async function ghPoll(){
     var ae=document.activeElement;
     if(ae && (ae.tagName==="INPUT"||ae.tagName==="TEXTAREA"||ae.tagName==="SELECT")) return;
     if(document.querySelector(".modal.show, .overlay, [data-modal-open]")) return;
-    var d = rows[0].data;
-    if(d && typeof d==="object"){
-      var incoming = normalize(d);
-      // 性能优化（#9）：数据无实际变化则跳过整页重渲染
-      if(JSON.stringify(incoming) === JSON.stringify(state)){ cloudUpdatedAt = rows[0].updated_at; return; }
-      cloudUpdatedAt = rows[0].updated_at;
-      state = incoming;
+      var d = rows[0].data;
+      if(d && typeof d==="object"){
+        var incoming = normalize(d);
+        // 2026-10-12 修复：云端整覆盖会丢失本地增量（如储备项目 progs）。合并保护同 ghPull。
+        try{
+          if(state && Array.isArray(state.reserves) && Array.isArray(incoming.reserves)){
+            var _lm2={}; state.reserves.forEach(function(r){ if(r&&r.id) _lm2[r.id]=r; });
+            incoming.reserves.forEach(function(r){
+              if(r&&r.id&&_lm2[r.id]){
+                var _lr2=_lm2[r.id];
+                if((!r.progs||!r.progs.length)&&_lr2.progs&&_lr2.progs.length) r.progs=_lr2.progs;
+                if(_lr2.reserveManualOrder!==undefined) r.reserveManualOrder=_lr2.reserveManualOrder;
+              }
+            });
+          }
+        }catch(e){}
+        // 性能优化（#9）：数据无实际变化则跳过整页重渲染
+        if(JSON.stringify(incoming) === JSON.stringify(state)){ cloudUpdatedAt = rows[0].updated_at; return; }
+        cloudUpdatedAt = rows[0].updated_at;
+        state = incoming;
       try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
       renderAll();
       setSync("已同步云端更新 "+new Date().toLocaleTimeString(), true);
