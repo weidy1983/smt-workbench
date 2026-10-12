@@ -1785,6 +1785,21 @@ function migrateReserves6(){
   if(added>0){ try{ save(); }catch(e){} }
   try{ localStorage.setItem("wb_migrate_reserves_v6","1"); }catch(e){}
 }
+function migrateReserves7(){
+  try{ if(localStorage.getItem("wb_migrate_reserves_v7")) return; }catch(e){} // 已迁移过则不再自动补回（尊重用户手动删除）
+  if(!state.reserves) state.reserves=[];
+  var seed=[
+    {id:"res-ningqing-2026", name:"宁庆空天智能装备（南京）股份有限公司", est:"1989年", loc:"南京（总部60亩）；湖南工厂（50亩）；成都/西安/沈阳中试平台；拟落地江浙沪皖", ind:"航空航天高端工业母机/五轴龙门加工装备/智能装备", prod:"飞机机翼壁板/蒙皮/长桁大结构件五轴龙门加工装备、导弹壳体舱段及火箭贮箱专机、智能工艺软件包（SPB）；横梁移动式龙门市占率国内第一，C919机翼由其机床加工，18轴火箭贮箱保温层加工专机两次交付航天某院", round:"D轮融资3亿元（投前估值12.3亿元；2026年10月申报科创板上市辅导、国投证券保荐，2027-2028申报发行）", inv:"", val:123000, status:"储备中",
+      logic:"国内稀缺的航空航天高端工业母机企业，横梁移动式龙门市占率国内第一，唯一基于航空航天核心工艺正向设计空天装备；C919机翼由其机床加工、18轴火箭贮箱保温层专机两次交付航天某院；国家级专精特新“小巨人”、牵头2025国家科技重大专项。资本端获国投招商/国投创合/北创投/国器元禾及国家先进制造业产业投资基金、工业母机基金、科技成果转化引导基金、军民融合基金（财政部/科技部/工信部系）注资。创始人蔡国庆与总经理蔡晶父子深耕机床三十余年，蔡晶任省机床工具协会秘书长、西门子数控专家委委员。2026年10月申报科创板辅导（国投证券保荐），退出路径明确；2025营收1.86亿、2026预计3亿（H1盈利1600万、收入1.5亿），在手订单6000万+、转化中1.5亿+。风险：2025仍亏损2900万、盈利质量待验证；D轮投前估值12.3亿偏高，于总对航天类估值虚高有顾虑、定价须审慎；落地需政府出资2.5-3亿、固投3-3.5亿、100-120亩，重资产与返投考核重；客户集中于航空航天、行业周期风险；上市进度受资本市场环境影响。",
+      land:"拟落地江浙沪皖，首选方案总投5亿、政府出资2.5-3亿、固投3-3.5亿、100-120亩，建设航空航天数控机床及智能装备生产装配线（含精密检测控制中心、研发中心等配套）。本轮D轮融资3亿（投前估值12.3亿），落地可与政府出资及返投承诺挂钩。",
+      progs:[]}
+  ];
+  var has={}; state.reserves.forEach(function(r){ has[r.id]=true; if(!Array.isArray(r.progs)) r.progs=[]; });
+  var added=0;
+  seed.forEach(function(s){ if(!has[s.id]){ s.progs=s.progs||[]; state.reserves.push(s); added++; } });
+  if(added>0){ try{ save(); }catch(e){} }
+  try{ localStorage.setItem("wb_migrate_reserves_v7","1"); }catch(e){}
+}
 function deleteTask(id){ state.tasks=state.tasks.filter(function(x){return x.id!==id;}); if(editTaskId===id) editTaskId=null; save(); renderAll(); toast("已删除"); }
 function editTask(id){ editTaskId=id; editTempId=null; editLpId=null; editReserveId=null; renderAll(); }
 function cancelEditTask(){ editTaskId=null; renderAll(); }
@@ -4151,12 +4166,12 @@ window.onerror = function(msg, url, line, col, err){
     if(SB_ENABLED()){
       setSync("同步中…");
       ghPull().then(function(ok){
-        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
-        else { migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
+        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
+        else { migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
       });
       ghStartPolling(); // 启动 15 秒轮询，跨设备准实时同步
     } else {
-      migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); renderAll();
+      migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); renderAll();
       setSync("本地模式 · 点此开启云端同步", false);
     }
     // 募资资讯：先用内置快照秒开，随后静默拉取云端最新版本（与党建主题库一致）；云端版本不低于内置则采用云端
