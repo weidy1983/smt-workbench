@@ -1843,6 +1843,21 @@ function migrateReserves8(){
   if(added>0){ try{ save(); }catch(e){} }
   try{ localStorage.setItem("wb_migrate_reserves_v8","1"); }catch(e){}
 }
+function migrateReserves9(){
+  try{ if(localStorage.getItem("wb_migrate_reserves_v9")) return; }catch(e){} // 已迁移过则不再自动补回（尊重用户手动删除）
+  if(!state.reserves) state.reserves=[];
+  var seed=[
+    {id:"res-bingguo-2026", name:"宾果智能", est:"2015年", loc:"现上市主体/总部：义乌（运营与研发主体在北京中关村/石景山）；拟迁总部至咸阳/廊坊/湖州/绍兴（优先近北京、西安、落地快）", ind:"教育具身智能/AI+教育/教育垂直大模型与智能硬件", prod:"AI助教机器人（全球首创“人机双师”教学）、智慧批阅终端/智慧魔方、BINGO智慧光（学校版AIOT中枢/家庭版陪伴终端）、AiBingo开放平台（Socrates模型API/SDK）；Socrates教育垂直大模型（幻觉率<3%）+教育多模态融合算法；68项发明专利、16项国际专利、12项实用新型", round:"Pre-IPO轮融资4-5亿元（BP投前估值36亿元、用户最新口径估值38.8亿元，口径待确认）；资金用途：生态战略40%、技术研发30%、市场扩张20%、营运资金10%；已递交港股IPO申请，预计2027-2028年完成上市", inv:"", val:388000, status:"储备中",
+      logic:"教育具身智能龙头，覆盖27省16000+学校、600万+学生，多省市“人工智能教育实验区”核心供应商；全球首创Socrates教育垂直大模型（幻觉率<3%）+多模态融合，68项发明专利/16项国际专利/12项实用新型；“G端引领-B端落地-C端渗透”三轮驱动跑通，2023-2025营收CAGR 188%（7000万→1.8亿→5亿），2024亏损8000万（渠道返佣+研发）2025扭正净利5000多万，2026预计6亿；清华IEEE Fellow孙富春任首席科学家、连续创业者闵海波任董事长CEO；已递交港股IPO，预计2027-2028上市，退出路径较明确。风险：AI教育估值偏高（38.8亿/投前36亿，于总对AI估值虚高有顾虑）、定价须审慎；天九渠道返佣历史与2024大额亏损需核查；G端回款依赖地方财政、进校/数据/未成年人合规风险；硬件委外、自有产线未建；上市仍存不确定性；政府基金兜底/回购/破发补偿条款合规边界需律师意见。",
+      land:"拟将上市主体及总部从义乌搬迁至新落地城市，意向咸阳、廊坊、湖州、绍兴（优先近北京/西安、落地快）；可购置土地建设自有机器人及智慧光产线（现硬件委外），满足政府固投诉求；因各地基金存在地域限制，2亿元“搬总部+落产线”方案可能需设专项基金；政府产业基金通常要求兜底、回购或破发补偿机制。",
+      progs:[]}
+  ];
+  var has={}; state.reserves.forEach(function(r){ has[r.id]=true; if(!Array.isArray(r.progs)) r.progs=[]; });
+  var added=0;
+  seed.forEach(function(s){ if(!has[s.id]){ s.progs=s.progs||[]; state.reserves.push(s); added++; } });
+  if(added>0){ try{ save(); }catch(e){} }
+  try{ localStorage.setItem("wb_migrate_reserves_v9","1"); }catch(e){}
+}
 function deleteTask(id){ state.tasks=state.tasks.filter(function(x){return x.id!==id;}); if(editTaskId===id) editTaskId=null; save(); renderAll(); toast("已删除"); }
 function editTask(id){ editTaskId=id; editTempId=null; editLpId=null; editReserveId=null; renderAll(); }
 function cancelEditTask(){ editTaskId=null; renderAll(); }
@@ -5201,12 +5216,12 @@ window.onerror = function(msg, url, line, col, err){
     if(SB_ENABLED()){
       setSync("同步中…");
       ghPull().then(function(ok){
-        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); migrateReserves8(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
-        else { migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); migrateReserves8(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
+        if(ok){ backfillLpProgressFromTasks(); migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); migrateReserves8(); migrateReserves9(); renderAll(); setSync("已同步 "+new Date().toLocaleTimeString(), true); }
+        else { migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); migrateReserves8(); migrateReserves9(); renderAll(); setSync(isOnlySampleState()?"云端无数据，本地为示例数据，未上传":"云端无数据，已用本地（真实数据将自动上传）", true); }
       });
       ghStartPolling(); // 启动 15 秒轮询，跨设备准实时同步
     } else {
-      migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); migrateReserves8(); renderAll();
+      migrateReserves(); migrateReserves2(); migrateReserves3(); migrateReserves4(); migrateReserves5(); migrateReserves6(); migrateReserves7(); migrateReserves8(); migrateReserves9(); renderAll();
       setSync("本地模式 · 点此开启云端同步", false);
     }
     // 募资资讯：先用内置快照秒开，随后静默拉取云端最新版本（与党建主题库一致）；云端版本不低于内置则采用云端
